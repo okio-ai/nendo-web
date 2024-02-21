@@ -1,0 +1,53 @@
+{
+    "name": "experiment",
+    "private": true,
+    "version": "0.0.0",
+    "type": "module",
+    "scripts": {
+        "dev": "vite",
+        "devcontainer": "vite --host",
+        "build": "NODE_ENV=production vite build",
+        "buildTest": "NODE_ENV=staging vite build",
+        "preview": "vite preview",
+        "lint": "eslint --ext .js,.vue --ignore-path .gitignore --fix src",
+        "format": "prettier --write ."
+    },
+    "dependencies": {
+        "@fortawesome/fontawesome-svg-core": "^6.3.0",
+        "@fortawesome/free-regular-svg-icons": "^6.3.0",
+        "@fortawesome/free-solid-svg-icons": "^6.3.0",
+        "@fortawesome/vue-fontawesome": "^3.0.3",
+        "@vue-flow/background": "^1.2.0",
+        "@vue-flow/controls": "^1.1.0",
+        "@vue-flow/core": "^1.21.1",
+        "@vue-flow/minimap": "^1.1.1",
+        "cssnano": "^6.0.1",
+        "d3": "^7.8.5",
+        "date-fns": "^2.30.0",
+        "file-saver": "^2.0.5",
+        "howler": "^2.2.4",
+        "jszip": "^3.10.1",
+        "lodash": "^4.17.21",
+        "pinia": "^2.0.30",
+        "uuid": "^9.0.0",
+        "vue": "^3.2.45",
+        "vue-router": "^4.1.6",
+        "vue-toast-notification": "^3.1.1",
+        "vue-upload-component": "^3.1.8",
+        "vuedraggable": "^4.1.0",
+        "wavesurfer.js": "^6.4.0"
+    },
+    "devDependencies": {
+        "@types/d3": "^7.4.0",
+        "@vitejs/plugin-vue": "^4.0.0",
+        "autoprefixer": "^10.4.13",
+        "eslint": "^8.41.0",
+        "eslint-config-prettier": "^8.8.0",
+        "eslint-plugin-vue": "^9.14.1",
+        "postcss": "^8.4.21",
+        "prettier": "^2.8.8",
+        "tailwindcss": "^3.2.4",
+        "vite": "^4.0.0",
+        "vite-plugin-eslint": "^1.8.1"
+    }
+}
