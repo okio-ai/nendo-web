@@ -15,6 +15,7 @@ import Filters from '@/components/apps/nendo_library/nendo_library_filters.vue'
 import { ref, onMounted, onBeforeUnmount, computed, watch } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { debounce } from 'lodash'
+import { useToast } from 'vue-toast-notification'
 
 // router
 const router = useRouter()
@@ -214,6 +215,26 @@ const collectionModalClose = async (data) => {
 function collectionModalCloseCall() {
     if (collectionModalRef.value) {
         collectionModalRef.value.closeModalParent()
+    }
+}
+
+
+// Track creation modal
+const trackCreationModalClose = async (response) => {
+    trackCreationModal.value = false
+    if (response && response.action_id){
+        useToast().success('Action created successfully.')
+    }
+    if (response && response.result_id) {
+        if (response.result_id.startsWith('collection')){
+            router.push({ path: '/' + response.result_id })
+            await getTracks()
+        } else {
+            router.push({ path: '/library/' + response.result_id })
+        }
+    } else {
+        router.push({ path: '/library/'})
+        await getTracks()
     }
 }
 
@@ -1047,7 +1068,7 @@ async function getTracks() {
         <Collection :track="collectionTrack" :collection="collectionStore.collection" @modalClosed="collectionModalClose" ref="collectionModalRef"></Collection>
     </modal>
     <Tools :modalopen="browserStore.toolViewActive" @click="browserStore.toolViewActive = !browserStore.toolViewActive" @modalClosed="browserStore.toolViewActive = false"></Tools>
-    <TrackCreation :track="trackCreationTrack" :modalopen="trackCreationModal" @click="trackCreationModal = !trackCreationModal" @modalClosed="trackCreationModal = false"></TrackCreation>
+    <TrackCreation :track="trackCreationTrack" :modalopen="trackCreationModal" @click="trackCreationModal = !trackCreationModal" @modalClosed="trackCreationModalClose"></TrackCreation>
     <Exporter :modalopen="exporterShow" @modalClosed="exporterShow = false"></Exporter>
 </template>
 

@@ -85,21 +85,8 @@ const handleFileUploadSuccess = (newFile) => {
     uploadFinished.value = true
     setTimeout(function(){
         uploadFinished.value = false
-        emit('modalClosed')
+        emit('modalClosed', newFile.response ? newFile.response : undefined)
     }, 3000)
-    if (newFile.response && newFile.response.action_id){
-        useToast().success('Action created successfully.')
-    }
-    // TODO handle collections
-    if (newFile.response && newFile.response.result_id) {
-        if (newFile.response.result_id.startsWith('collection')){
-            router.push({ path: '/' + newFile.response.result_id })
-        } else {
-            router.push({ path: '/library/' + newFile.response.result_id })
-        }
-    } else {
-        router.push({ path: '/library/'})
-    }
 }
 
 const handleFileUploadError = (newFile) => {
