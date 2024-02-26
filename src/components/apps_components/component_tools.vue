@@ -266,7 +266,7 @@ const generatorRun = async () => {
             actionStatus.value = statusData.data.status
         }
         // Optional: Add a delay to prevent hammering the server with requests
-        if (actionStatus.value !== 'finished') {
+        if (actionStatus.value !== 'finished' && isOpen.value === true) {
             await new Promise((resolve) => setTimeout(resolve, 1000))
         }
     }
@@ -289,6 +289,8 @@ const routeToResult = async () => {
 }
 
 const closeModal = async () => {
+    isOpen.value = false
+    showConfig.value = false
     toolActive.value = false
     emit('modalClosed')
 }

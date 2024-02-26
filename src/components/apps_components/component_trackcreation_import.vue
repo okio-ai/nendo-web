@@ -49,6 +49,10 @@ const state = reactive({
     collectionId: '',
     selectedGeneratorId: '',
     generator : [
+        {
+            id: '',
+            name: '',
+        },
         { 
             id: 'musicanalysis',
             name: 'Music Analysis',
