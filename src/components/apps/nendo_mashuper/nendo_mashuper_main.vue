@@ -240,15 +240,16 @@ function shortenedText(text, maxlength) {
 }
 
 function mute(track, index) {
+  audioPlayerAPI.toggleMute(index)
   if (!track.settings.mute) {
     track.settings.mute = true
-    audioPlayerAPI.toggleMute(index)
   }
 }
+
 function unmute(track, index) {
+  audioPlayerAPI.toggleMute(index)
   if (track.settings.mute) {
     track.settings.mute = false
-    audioPlayerAPI.toggleMute(index)
   }
 }
 
