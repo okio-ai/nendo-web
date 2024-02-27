@@ -200,14 +200,19 @@ async function startup() {
 }
 
 const keydownHandler = (event) => {
-  const keyNumber = parseInt(event.key, 10)
-  if ((keyNumber >= 1 && keyNumber <= 9) || event.key === '0') {
-    const channel = event.key === '0' ? 10 : keyNumber
-    solo(lib.channels[channel-1], channel-1)
-  } else if (event.code === 'Space') {
-    togglePlayback()
-  } else if (event.key.toUpperCase() === 'N') {
-    // generate()
+  if (menus.track.menuOpen === false &&
+      menus.generator.menuOpen === false &&
+      sceneNameMenuOpen.value === false
+  ) {
+    const keyNumber = parseInt(event.key, 10)
+    if ((keyNumber >= 1 && keyNumber <= 9) || event.key === '0') {
+      const channel = event.key === '0' ? 10 : keyNumber
+      solo(lib.channels[channel-1], channel-1)
+    } else if (event.code === 'Space') {
+      togglePlayback()
+    } else if (event.key.toUpperCase() === 'N') {
+      // generate()
+    }
   }
 }
 
@@ -350,7 +355,7 @@ async function getTrack(track) {
         let statusData = null
         while (isOpen.value === true && taskStatus !== 'finished') {
           const statusResponse = await fetch(
-            BASE_API_URL + '/api/actions/' + data.task_id,
+            BASE_API_URL + '/api/actions/' + data.action_id,
             {
               method: 'GET',
               headers: {
@@ -643,7 +648,7 @@ const handleTempoSelect = async (newTempo) => {
           let statusData = null
           while (isOpen.value === true && taskStatus !== 'finished') {
             const statusResponse = await fetch(
-              BASE_API_URL + '/api/actions/' + data.task_id,
+              BASE_API_URL + '/api/actions/' + data.action_id,
               {
                 method: 'GET',
                 headers: {
@@ -908,7 +913,7 @@ async function generateMusic(prompt, channelId, newChannel) {
       let statusData = null
       while (lib.channels[index].loadingmusicgen === true && taskStatus !== 'finished') {
         const statusResponse = await fetch(
-          BASE_API_URL + '/api/actions/' + data.task_id,
+          BASE_API_URL + '/api/actions/' + data.action_id,
           {
             method: 'GET',
             headers: {
