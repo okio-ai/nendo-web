@@ -203,8 +203,9 @@ const keydownHandler = (event) => {
   const keyNumber = parseInt(event.key, 10)
   if ((keyNumber >= 1 && keyNumber <= 9) || event.key === '0') {
     const channel = event.key === '0' ? 10 : keyNumber
+    solo(lib.channels[channel-1], channel-1)
   } else if (event.code === 'Space') {
-    // togglePlayback()
+    togglePlayback()
   } else if (event.key.toUpperCase() === 'N') {
     // generate()
   }
@@ -253,10 +254,10 @@ function unmute(track, index) {
   }
 }
 
-const solo = (track, index) => {
+const solo = (channel, index) => {
   audioPlayerAPI.toggleSolo(index)
 
-  if (track.settings.mute === false) {
+  if (channel.settings.mute === false) {
     // check if already was solo
     let isAloneUnmuted = true
     lib.channels.forEach((channel, i) => {
@@ -276,7 +277,7 @@ const solo = (track, index) => {
   lib.channels.forEach((channel) => {
     channel.settings.mute = true
   })
-  track.settings.mute = false
+  channel.settings.mute = false
 }
 
 const setVolume = (index, volume) => {
@@ -331,7 +332,6 @@ async function getTrack(track) {
         }
       }
     )
-    console.log(response)
     if (response.status !== 200) {
       throw new Error(response.statusText)
     }
@@ -370,8 +370,6 @@ async function getTrack(track) {
             await new Promise((resolve) => setTimeout(resolve, 1000))
           }
         }
-
-        console.log(statusData.data)
         track_id = statusData.data.result
         fileName = BASE_API_URL + '/api/mashuper/audio/' + track_id
       }
@@ -871,6 +869,7 @@ async function generatorMenuSave() {
 }
 
 async function generateMusic(prompt, channelId, newChannel) {
+  const sessionStore = useSessionStore()
   let index = lib.channels.findIndex((channel) => channel.id === channelId)
 
   if (lib.channels[index].loadingmusicgen) {
@@ -878,21 +877,24 @@ async function generateMusic(prompt, channelId, newChannel) {
   }
   try {
     lib.channels[index].loadingmusicgen = true
-    // prompt + ' ' + scenes.currentScene.tempo + 'BPM, LOOP'
-    const track_id = lib.channels[index].track.id
+    // TODO would be nice but doesn't work with musicgen:
+    // prompt + ' ' + scenes.currentScene.tempo + 'bpm, loop'
+    // const track_id = lib.channels[index].track.id
 
     const response = await fetch(BASE_API_URL + '/api/mashuper/generate', {
       method: 'POST',
       headers: {
-        'Content-Type': 'application/json'
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${sessionStore.getToken()}`
       },
       body: JSON.stringify({
         model: 'medium',
-        duration: 8, // TODO make this configurable?
+        duration: 4, // in beats; TODO make this configurable?
         prompts: [prompt],
         generation_type: 'medium',
-        track_id: track_id,
-        num_samples: 1
+        track_id: '', // track_id
+        num_samples: 1,
+        tempo: scenes.currentScene.tempo,
       })
     })
 
@@ -901,37 +903,62 @@ async function generateMusic(prompt, channelId, newChannel) {
       throw new Error('Response was not ok')
     } else {
       const data = await response.json()
-      const gentrack = 'http://65.109.75.24/audio/'  + data.track_id // + data.filepaths[0]
+      // Initial check for the task status
+      let taskStatus = 'started'
+      let statusData = null
+      while (lib.channels[index].loadingmusicgen === true && taskStatus !== 'finished') {
+        const statusResponse = await fetch(
+          BASE_API_URL + '/api/actions/' + data.task_id,
+          {
+            method: 'GET',
+            headers: {
+                'Content-Type': 'application/json',
+                Authorization: `Bearer ${sessionStore.getToken()}`
+            }
+          }
+        )
+        statusData = await statusResponse.json()
+        if (statusData.data) {
+          taskStatus = statusData.data.status
+        } else{
+          throw new Error("Empty response")
+        }
+        // Optional: Add a delay to prevent hammering the server with requests
+        if (taskStatus !== 'finished') {
+          await new Promise((resolve) => setTimeout(resolve, 1000))
+        }
+      }
 
-      index = lib.channels.findIndex((channel) => channel.id === channelId)
-
-      console.log('musicGen:', data, gentrack, newChannel)
+      const track_id = statusData.data.result
+      const fileName = BASE_API_URL + '/api/mashuper/audio/' + track_id
+  
       if (!newChannel) {
-        lib.channels[index].track.name = prompt // data.filepaths[0]
-        lib.channels[index].track.url = gentrack
-        await audioPlayerAPI.replaceTrack(index, gentrack)
+        lib.channels[index].track.id = track_id
+        lib.channels[index].track.name = prompt
+        lib.channels[index].track.url = fileName
+        await audioPlayerAPI.replaceTrack(index, fileName)
       } else {
         let newtrack = JSON.parse(JSON.stringify(lib.channels[index]))
         // lib.channels.push(newtrack)
         lib.channels.splice(index + 1, 0, newtrack)
 
         const addedtrack = lib.channels[index + 1]
-        addedtrack.track.name = prompt // data.filepaths[0]
-        addedtrack.track.url = gentrack
+        addedtrack.track.name = prompt
+        addedtrack.track.url = fileName
         addedtrack.loading = false
         addedtrack.id = uuidv4()
         addedtrack.loadingmusicgen = false
-        await audioPlayerAPI.addTrack(gentrack, index + 1)
-        await audioPlayerAPI.replaceTrack(index + 1, gentrack)
+        await audioPlayerAPI.addTrack(fileName, index + 1)
+        // await audioPlayerAPI.replaceTrack(index + 1, fileName)
       }
 
       lib.channels[index].loadingmusicgen = false
       return data
     }
-  } catch (err) {
+  } catch (error) {
     lib.channels[index].loadingmusicgen = false
-    console.log('error', err.message)
-    return err.message
+    useToast().error(`${error}`)
+    return null
   }
 }
 
