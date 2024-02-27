@@ -867,7 +867,6 @@ async function openGeneratorMenu(channelId) {
 }
 
 async function generatorMenuSave() {
-  menus.generator.newChannel
   generateMusic(menus.generator.prompt, menus.generator.currentTrack, menus.generator.newChannel)
   menus.generator.menuOpen = false
   menus.generator.prompt = ''
@@ -933,7 +932,7 @@ async function generateMusic(prompt, channelId, newChannel) {
             taskStatus !== 'finished' &&
             menus.generator.menuOpen === true
           ) {
-          await new Promise((resolve) => setTimeout(resolve, 1000))
+          await new Promise((resolve) => setTimeout(resolve, 2000))
         }
       }
 
@@ -946,7 +945,7 @@ async function generateMusic(prompt, channelId, newChannel) {
         lib.channels[index].track.url = fileName
         await audioPlayerAPI.replaceTrack(index, fileName)
       } else {
-        let newtrack = JSON.parse(JSON.stringify(lib.channels[index]))
+        const newtrack = JSON.parse(JSON.stringify(lib.channels[index]))
         // lib.channels.push(newtrack)
         lib.channels.splice(index + 1, 0, newtrack)
 
