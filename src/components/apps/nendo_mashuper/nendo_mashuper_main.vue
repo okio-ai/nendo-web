@@ -910,7 +910,9 @@ async function generateMusic(prompt, channelId, newChannel) {
       // Initial check for the task status
       let taskStatus = 'started'
       let statusData = null
-      while (lib.channels[index].loadingmusicgen === true && taskStatus !== 'finished') {
+      while (lib.channels[index].loadingmusicgen === true &&
+            taskStatus !== 'finished' &&
+            taskStatus !== 'failed') {
         const statusResponse = await fetch(
           BASE_API_URL + '/api/actions/' + data.action_id,
           {
@@ -928,12 +930,12 @@ async function generateMusic(prompt, channelId, newChannel) {
           throw new Error("Empty response")
         }
         // Optional: Add a delay to prevent hammering the server with requests
-        if (lib.channels[index].loadingmusicgen === true &&
-            taskStatus !== 'finished' &&
-            menus.generator.menuOpen === true
-          ) {
+        if (taskStatus !== 'finished') {
           await new Promise((resolve) => setTimeout(resolve, 2000))
         }
+      }
+      if (taskStatus === 'failed'){
+        throw new Error("Generation failed")
       }
 
       const track_id = statusData.data.result
