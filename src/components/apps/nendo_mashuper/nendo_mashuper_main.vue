@@ -929,7 +929,10 @@ async function generateMusic(prompt, channelId, newChannel) {
           throw new Error("Empty response")
         }
         // Optional: Add a delay to prevent hammering the server with requests
-        if (taskStatus !== 'finished') {
+        if (lib.channels[index].loadingmusicgen === true &&
+            taskStatus !== 'finished' &&
+            menus.generator.menuOpen === true
+          ) {
           await new Promise((resolve) => setTimeout(resolve, 1000))
         }
       }
