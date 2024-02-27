@@ -245,6 +245,7 @@ function mute(track, index) {
     track.settings.mute = true
   }
 }
+
 function unmute(track, index) {
   audioPlayerAPI.toggleMute(index)
   if (track.settings.mute) {
