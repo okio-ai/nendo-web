@@ -240,15 +240,15 @@ function shortenedText(text, maxlength) {
 }
 
 function mute(track, index) {
+  audioPlayerAPI.toggleMute(index)
   if (!track.settings.mute) {
     track.settings.mute = true
-    audioPlayerAPI.toggleMute(index)
   }
 }
 function unmute(track, index) {
+  audioPlayerAPI.toggleMute(index)
   if (track.settings.mute) {
     track.settings.mute = false
-    audioPlayerAPI.toggleMute(index)
   }
 }
 
@@ -370,6 +370,7 @@ async function getTrack(track) {
           }
         }
 
+        console.log(statusData.data)
         track_id = statusData.data.result
         fileName = BASE_API_URL + '/api/mashuper/audio/' + track_id
       }
@@ -868,14 +869,6 @@ async function generatorMenuSave() {
   menus.generator.prompt = ''
 }
 
-function getFileNameAndExtension(url) {
-  const filenameWithExtension = url.substring(url.lastIndexOf('/') + 1)
-  const filename = filenameWithExtension.split('.')[0]
-  const extension = filenameWithExtension.split('.').pop()
-  const filenameAndExtension = `${filename}.${extension}`
-  return filenameAndExtension
-}
-
 async function generateMusic(prompt, channelId, newChannel) {
   let index = lib.channels.findIndex((channel) => channel.id === channelId)
 
@@ -885,7 +878,7 @@ async function generateMusic(prompt, channelId, newChannel) {
   try {
     lib.channels[index].loadingmusicgen = true
     // prompt + ' ' + scenes.currentScene.tempo + 'BPM, LOOP'
-    const trackAudioFile = getFileNameAndExtension(lib.channels[index].track.url)
+    const track_id = lib.channels[index].track.id
 
     const response = await fetch(BASE_API_URL + '/api/mashuper/generate', {
       method: 'POST',
@@ -893,11 +886,11 @@ async function generateMusic(prompt, channelId, newChannel) {
         'Content-Type': 'application/json'
       },
       body: JSON.stringify({
-        model: 'melody',
-        duration: 8,
+        model: 'medium',
+        duration: 8, // TODO make this configurable?
         prompts: [prompt],
-        generation_type: 'melody',
-        melody_track_id: trackAudioFile,
+        generation_type: 'medium',
+        track_id: track_id,
         num_samples: 1
       })
     })
@@ -1339,7 +1332,7 @@ const handleCollectionSelect = (collectionId, collectionName) => {
                   <img src="/assets/loading_spinner.webp" width="50" class="mt-4 ml-4" />
                   <div class="absolute inset-0 bg-ngreyoverlay rounded-md opacity-0 text-white"></div>
               </div>
-              <!--<div
+              <div
                 class="rounded-md min-w-[85px] text-center align-middle relative cursor-pointer"
                 :style="{ backgroundColor: track.color }"
                 @click="openGeneratorMenu(track.id)"
@@ -1355,7 +1348,7 @@ const handleCollectionSelect = (collectionId, collectionName) => {
                 <div
                   class="absolute inset-0 bg-ngreyoverlay rounded-md opacity-0 hover:opacity-60 text-white"
                 ></div>
-              </div>-->
+              </div>
               <!-- <audiorecorder
             class="min-w-[50px]"
             :style="{ backgroundColor: track.color }"
