@@ -92,14 +92,9 @@ const handleFileUploadSuccess = (newFile) => {
 const handleFileUploadError = (newFile) => {
     fileUploadActive.value = false
     uploadFailed.value = true
-    setTimeout(function(){
-        uploadFailed.value = false
-        emit('modalClosed')
-    }, 3000)
     if (newFile.error){
         useToast().error(newFile.response.detail)
     }
-    router.push({ path: '/library/'})
 }
 
 const handleFileUploadStart = () => {
@@ -292,19 +287,15 @@ const afterLeave = (el) => {
                         Upload Complete
                     </div>
                 </template>
-                <template v-else-if="uploadFailed">
-                    <font-awesome-icon icon="triangle-exclamation" class="h-[40px] float-left mr-4" />
-                    Upload Failed
-                </template>
                 <template v-else>
                     <template v-if="track.track_type === 'track'">
                         <div class="pt-2">
-                            <Import accept="audio/mpeg,audio/wav,audio/flac,application/zip,application/tar,application/gzip" extension="mp3,wav,aiff,flac,zip,tar,gz" @file-upload-start="handleFileUploadStart" @file-upload-success="handleFileUploadSuccess" @file-upload-error="handleFileUploadError" @file-upload-cancel="closeModal"></Import>
+                            <Import accept="audio/*,application/zip,application/tar,application/gzip" extension="mp3,wav,aiff,flac,zip,tar,gz" @file-upload-start="handleFileUploadStart" @file-upload-success="handleFileUploadSuccess" @file-upload-error="handleFileUploadError" @file-upload-cancel="closeModal"></Import>
                         </div>
                     </template>
                     <template v-if="track.track_type === 'image'">
                         <div class="pt-2">
-                            <Import accept="image/png,image/gif,image/jpeg,image/webp" extension="gif,jpg,jpeg,png,webp" @file-upload-start="handleFileUploadStart"  @file-upload-success="handleFileUploadSuccess" @file-upload-error="handleFileUploadError" @file-upload-cancel="closeModal"></Import>
+                            <Import accept="image/*" extension="gif,jpg,jpeg,png,webp" @file-upload-start="handleFileUploadStart"  @file-upload-success="handleFileUploadSuccess" @file-upload-error="handleFileUploadError" @file-upload-cancel="closeModal"></Import>
                         </div>
                     </template>
                     <template v-if="track.track_type === 'text'">

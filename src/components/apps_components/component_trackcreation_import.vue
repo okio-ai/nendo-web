@@ -43,7 +43,7 @@ const state = reactive({
 const props = defineProps({
     accept: {
         type: String,
-        default: 'audio/mpeg,audio/wav,audio/flac,application/zip,application/tar,application/gzip'
+        default: 'audio/*,application/zip,application/tar,application/gzip'
     },
     extensions: {
         type: String,
@@ -69,7 +69,7 @@ const getUploadUrl = () => {
 const uppy = new Uppy({
     id: 'uppy',
     autoProceed: false,
-    debug: true,
+    debug: false,
     restrictions: {
         maxFileSize: 1024 * 1024 * 200, // 200MB
         minNumberOfFiles: 1,
