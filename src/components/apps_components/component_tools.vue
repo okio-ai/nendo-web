@@ -158,6 +158,26 @@ const generatorData = ref({
                 },
             ]
         },
+        {
+            id: 'webimport',
+            name: 'Web Importer',
+            description: '',
+            image: '',
+            showInput: false,
+            showReplaceSelector: false,
+            showAddToCollectionPicker: true,
+            plugins: [
+                {
+                    id: 'webimport',
+                    name: 'WebImport',
+                    showSettings: true,
+                    settings: [
+                        { id: 'links', name: 'Links', description: '', type: 'list', value: [''] },
+                        { id: 'limit', name: 'Playlist Limit', description: '', type: 'numbers', value: '-1', value_min: '-1', value_max: '500', value_step: '1'}
+                    ]
+                },
+            ]
+        },
         { 
             id: 'getpage',
             name: 'Get Page',
@@ -491,6 +511,29 @@ const getIsActiveSetting = (plugin) => {
                                             </template>
                                             <template v-if="settings.type === 'string'">
                                                 <textarea v-model="settings.value" @input="autoResize" class="border border-gray-700 p-2 bg-transparent rounded w-full resize-none overflow-hidden custom-textarea" rows="1" placeholder="Your text..."></textarea>
+                                            </template>
+                                            <template v-if="settings.type === 'list'">
+                                                <div class="flex flex-col">
+                                                    <div
+                                                        v-for="(value, valueIndex) in settings.value"
+                                                        :key="valueIndex"
+                                                        class="flex"
+                                                    >
+                                                        <textarea
+                                                            v-model="settings.value[valueIndex]"
+                                                            @input="autoResize"
+                                                            class="mb-1 border border-gray-700 p-2 bg-transparent rounded resize-none overflow-hidden custom-textarea"
+                                                            rows="1"
+                                                            placeholder="Your text..."
+                                                        >
+                                                        </textarea>
+                                                        <template v-if="valueIndex===settings.value.length - 1">
+                                                            <button class="ml-1 mb-1 px-4 py-0 text-s border hover:border-ngreenhover hover:text-ngreenhover border-gray-300 dark:border-gray-700 dark:hover:border-ngreenhover font-medium rounded-lg focus:outline-none whitespace-nowrap" @click="() => settings.value.push('')">
+                                                                <font-awesome-icon icon="plus" />
+                                                            </button>
+                                                        </template>
+                                                    </div>
+                                                </div>
                                             </template>
                                             <template v-if="settings.type === 'numbers'">
                                                 <input type="number" v-model="settings.value" :min="settings.value.value_min" :max="settings.value.value_max" :step="settings.value.value_step" @input="validateNumberInput(settings)" class="p-1 bg-transparent border-gray-600 dark:text-white border border-gray-300 focus:border-blue-500 rounded focus:outline-none focus:ring focus:ring-blue-200 text-gray-700 w-full" />
