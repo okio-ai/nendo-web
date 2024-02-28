@@ -222,8 +222,8 @@ const afterLeave = (el) => {
 
 <template>
     <modal :open="isOpen" @update:open="closeModal" title="">
-        <div class="flex gap-4 items-center mb-2">
-            <div class="font-bold text-xl">
+        <div class="flex gap-4 items-center mb-2 border-b dark:border-gray-800 pb-3">
+            <div class="text-xl font-bold">
                 <template v-if="!fileUploadActive">
                     {{ modalName }}
                 </template>
@@ -240,6 +240,7 @@ const afterLeave = (el) => {
                     </option>
                 </select>
             </div>
+            <font-awesome-icon icon="x" class="float-right mt-1 cursor-pointer hover:text-ngreenhover" @click="closeModal" />
             <!-- <button
                 class="top-2 ml-auto text-gray-400 cursor-pointer hover:text-gray-900"
                 @click="closeModal()"
@@ -252,7 +253,7 @@ const afterLeave = (el) => {
             <div v-if="trackEdit">
                 <!--------------------------------------------- Track --------------------------------------------------- -->
                 <template v-if="track">
-                    <div class="grid grid-cols-1 gap-2 mb-2 border-t border-gray-700 pt-4">
+                    <div class="grid grid-cols-1 gap-2 mb-2 pt-4">
                         <div>
                             <div class="font-medium mb-1">Title</div>
                             <textarea v-model="metaTitleTemp" @input="autoResize" class="border p-2 rounded w-full resize-none overflow-hidden dark:border-gray-700 custom-textarea" rows="1"></textarea>
