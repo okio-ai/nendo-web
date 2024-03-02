@@ -20,6 +20,7 @@ const tools = ref([
     {'name': 'Music Polymath', 'id': 'polymath'},
     {'name': 'Music Mashuper', 'id': 'mashuper'},
     {'name': 'Music Generator', 'id': 'musicgen'},
+    {'name': 'Web Importer', 'id': 'webimport'},
     // {'name': 'Get Page', 'id': 'getpage'},
 ])
 
