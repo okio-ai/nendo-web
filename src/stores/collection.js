@@ -178,7 +178,6 @@ export const useCollectionStore = defineStore({
                 const data = await response.json()
                 this.collection = data.data.collection
                 this.collection.size = data.data.size
-
                 return this.collection
             } catch (error) {
                 this.error = error
@@ -298,7 +297,11 @@ export const useCollectionStore = defineStore({
                 this.loading = false
             }
         },
-        async addTracksToCollection(collectionId, trackType) {
+        async addTracksToCollection(collectionId, options = {}) {
+            const {
+                relatedCollectionId = null,
+                trackType = null
+            } = options
             const sessionStore = useSessionStore()
             if (collectionId === undefined) {
                 return
@@ -309,7 +312,7 @@ export const useCollectionStore = defineStore({
                 const searchFilterParams = this.getSearchFilterParams()
                 const collectionUrl = `${BASE_API_URL}/api/v1/collections/${collectionId}/tracks?search_filter=${encodeURIComponent(
                     JSON.stringify(searchFilterParams)
-                )}&track_type=${trackType}`
+                )}&track_type=${trackType}&related_collection_id=${relatedCollectionId}`
                 const response = await fetch(
                     collectionUrl,
                     {

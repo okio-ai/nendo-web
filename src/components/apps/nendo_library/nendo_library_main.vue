@@ -211,11 +211,10 @@ const collectionModalClose = async (data) => {
             trackStore.tracks[trackIndex] = JSON.parse(JSON.stringify(trackStore.track))
         }
     }
-    if (data.track.value === 'bulk'){
-        if (router.currentRoute.value.name === 'collection'){
-            await collectionStore.fetchCollection(route.params.id)
-        }
-        getTracks()
+    if (router.currentRoute.value.name === 'collection'){
+        await collectionStore.fetchCollection(route.params.id)
+        collectionSelector.value.collectionSelected = [collectionStore.collection]
+        await getTracks()
     }
 }
 
@@ -490,6 +489,10 @@ const deleteTrack = async (track) => {
             )
             if (deletedTrackId !== -1) {
                 trackStore.tracks.splice(deletedTrackId, 1);
+                if (router.currentRoute.value.name === 'collection'){
+                    await collectionStore.fetchCollection(route.params.id)
+                    collectionSelector.value.collectionSelected = [collectionStore.collection]
+                }
             } else {
                 await getTracks()
             }
@@ -518,6 +521,7 @@ const bulkDelete = async () => {
         })
         if (router.currentRoute.value.name === 'collection'){
             await collectionStore.fetchCollection(route.params.id)
+            collectionSelector.value.collectionSelected = [collectionStore.collection]
         }
         getTracks()
     }
@@ -589,6 +593,7 @@ async function getTracks() {
             reset_paging: true,
             track_type: trackTypeSettings.value.value
         })
+        lastVisitedId.value = ''
     }
     if (router.currentRoute.value.name === 'collection') {
         if (lastVisitedId.value !== route.params.id) {

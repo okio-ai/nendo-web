@@ -164,7 +164,11 @@ async function collectionSelected(collection) {
         if (selectedIndex === -1) {
             collectionAddSelector.value.push(collection.id)
             if (props.track.value === 'bulk'){
-                await addTracksToCollection(collection, props.trackTypeFilter)
+                await addTracksToCollection(
+                    collection,
+                    router.currentRoute.value.name === 'collection' ? route.params.id : '',
+                    props.trackTypeFilter
+                )
             } else {
                 await addTrackToCollection(collection, props.track.value)
             }
@@ -195,9 +199,13 @@ const addTrackToCollection = async (collection, track) => {
     getCollections()
 }
 
-const addTracksToCollection = async (collection, trackTypeFilter) => {
+const addTracksToCollection = async (collection, relatedCollectionId, trackTypeFilter) => {
     await collectionStore.addTracksToCollection(
-        collection.id, trackTypeFilter
+        collection.id,
+        {
+            relatedCollectionId: relatedCollectionId,
+            trackType: trackTypeFilter
+        }
     )
 }
 
@@ -221,6 +229,7 @@ const handleSearchInput = debounce((event) => {
 const closeModal = async (collection, track) => {
     browserStore.collectionModalAdd = false
     browserStore.collectionModalEdit = false
+    // collectionSelector.value.collectionSelected = [props.collection]
     emit('modalClosed', {collection: collectionSelector, addTrack: collectionAddTrack, track: props.track})
 }
 
