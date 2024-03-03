@@ -282,6 +282,38 @@ export const useTrackStore = defineStore({
             } finally {
                 this.loading = false
             }
-        }
+        },
+        async deleteTracks(options = {}) {
+            const sessionStore = useSessionStore()
+            const {
+                collection_id = null,
+                track_type = null
+            } = options
+            this.loading = true
+            try {
+                const searchFilterParams = this.getSearchFilterParams()
+                let tracksUrl = `${BASE_API_URL}/api/v1/tracks?search_filter=${encodeURIComponent(
+                    JSON.stringify(searchFilterParams)
+                )}&track_type=${track_type}&collection_id=${collection_id}`
+                const response = await fetch(tracksUrl, {
+                    method: 'DELETE',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        Authorization: `Bearer ${sessionStore.getToken()}`
+                    }
+                })
+
+                if (response.status === 401) {
+                    await router.push('/login')
+                }
+
+                const data = await response.json()
+                return data
+            } catch (error) {
+                this.error = error
+            } finally {
+                this.loading = false
+            }
+        },
     }
 })

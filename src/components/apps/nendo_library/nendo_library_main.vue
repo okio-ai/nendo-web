@@ -51,6 +51,7 @@ const exporterShow = ref(false)
 const filters = ref(false)
 const filtersettings = ref([])
 const searchResultTableRowsConfigModal = ref(false)
+const bulkContextMenu = ref(false)
 const searchResultDisplayType = ref('list')
 const lastVisitedId = ref('')
 const trackTypeSettings = ref({
@@ -200,7 +201,7 @@ const collectionModalClose = async (data) => {
     } else {
         router.push({ path: '/library/' })
     }
-    if(data.addTrack.value) {
+    if(data.addTrack.value && data.track.value !== 'bulk') {
         await trackStore.fetchTrack(data.track.value.id)
         // update track on collection assign
         if (router.currentRoute.value.name === 'library' || router.currentRoute.value.name === 'collection') { 
@@ -209,6 +210,12 @@ const collectionModalClose = async (data) => {
             )
             trackStore.tracks[trackIndex] = JSON.parse(JSON.stringify(trackStore.track))
         }
+    }
+    if (data.track.value === 'bulk'){
+        if (router.currentRoute.value.name === 'collection'){
+            await collectionStore.fetchCollection(route.params.id)
+        }
+        getTracks()
     }
 }
 
@@ -498,6 +505,22 @@ const editTrack = async (track) => {
 const newTrack = async (track) => {
     trackCreationTrack.value = {}
     trackCreationModal.value = true
+}
+
+// Bulk processing
+const bulkDelete = async () => {
+    let text = `Delete all Tracks${router.currentRoute.value.name === 'collection' ? ' in this collection' : ''}?`
+    if (confirm(text) == true) {
+        bulkContextMenu.value = false
+        await trackStore.deleteTracks({
+            collection_id: router.currentRoute.value.name === 'collection' ? route.params.id : "",
+            track_type: trackTypeSettings.value.value
+        })
+        if (router.currentRoute.value.name === 'collection'){
+            await collectionStore.fetchCollection(route.params.id)
+        }
+        getTracks()
+    }
 }
 
 // Paginate Infinite scroll
@@ -812,6 +835,18 @@ async function getTracks() {
             </template>
 
             <div class="mb-20">
+                <div class="p-4 pt-1.5 pr-2 h-[44px] dark:h-[45px] text-sm border-b dark:border-black origin-top-right absolute right-24 font-bold">
+                    <div class="items-center gap-6 group-hover:visible">
+                        <button @click="bulkContextMenu = !bulkContextMenu" class="cursor-pointer px-4 text-gray-600 dark:hover:text-gray-100" @click.stop>
+                            All
+                            <font-awesome-icon icon="ellipsis-vertical" size="xl" class="ml-3" />
+                        </button>
+                    </div>
+                </div>
+                <div v-show="bulkContextMenu" @click="bulkContextMenu = false" @click.stop class="group-hover:visible origin-top-right absolute right-4 mt-8 w-56 p-1 rounded-md shadow-lg bg-gray-100 dark:bg-[#282828] ring-1 ring-black ring-opacity-5 focus:outline-none z-50">
+                    <div class="flex p-3 hover:bg-gray-200 dark:hover:bg-[#3e3e3e] rounded" @click="bulkDelete()"><div class="w-6"><font-awesome-icon icon="x" class="mt-0.5" /></div>Delete</div>
+                    <div class="flex p-3 hover:bg-gray-200 dark:hover:bg-[#3e3e3e] rounded" @click="collectionTrack.value = 'bulk'; browserStore.collectionModal = true; bulkContextMenu = false"><div class="w-6"><font-awesome-icon icon="bars" class="mt-0.5" /></div>Add to collection</div>
+                </div>
                 <template v-if="searchResultDisplayType === 'grid'">
                     <div class="p-4 pt-1.5 pr-2 h-[44px] dark:h-[45px] text-sm border-b dark:border-black flex font-bold">
                         <div class="mt-1">Items</div>
@@ -1065,7 +1100,7 @@ async function getTracks() {
         </modal>
     </div>
     <modal :open="browserStore.collectionModal" @update:open="collectionModalCloseCall()" title="">   
-        <Collection :track="collectionTrack" :collection="collectionStore.collection" @modalClosed="collectionModalClose" ref="collectionModalRef"></Collection>
+        <Collection :track="collectionTrack" :trackTypeFilter="trackTypeSettings.value" :collection="collectionStore.collection" @modalClosed="collectionModalClose" ref="collectionModalRef"></Collection>
     </modal>
     <Tools :modalopen="browserStore.toolViewActive" @click="browserStore.toolViewActive = !browserStore.toolViewActive" @modalClosed="browserStore.toolViewActive = false"></Tools>
     <TrackCreation :track="trackCreationTrack" :modalopen="trackCreationModal" @click="trackCreationModal = !trackCreationModal" @modalClosed="trackCreationModalClose"></TrackCreation>

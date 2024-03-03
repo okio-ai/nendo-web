@@ -1,10 +1,13 @@
 import { defineStore } from 'pinia'
 import { v4 as uuidv4 } from 'uuid'
 import router from '../router'
+import { useFilterStore } from '@/stores/filters.js'
 import { useSessionStore } from '@/stores/session.js'
 import { useToast } from 'vue-toast-notification'
 
 const BASE_API_URL = import.meta.env.VITE_API_URL
+
+const filterStore = useFilterStore()
 
 export const useCollectionStore = defineStore({
     id: 'collection',
@@ -19,6 +22,22 @@ export const useCollectionStore = defineStore({
     }),
     getters: {},
     actions: {
+        getSearchFilterParams: function () {
+            let searchFilterParams = {
+                search: filterStore.search,
+                filters: [],
+            }
+
+            filterStore.selectedFilters.forEach((filter) => {
+                const query = {...filter.query}
+
+                // explicitly delete filter options because of really large option array like genre, instruments, moods, etc.
+                delete query.options
+                searchFilterParams.filters.push(query)
+            })
+
+            return searchFilterParams
+        },
         async saveTempCollectionAsGeneric(collectionId, newName) {
             const sessionStore = useSessionStore()
             if (
@@ -279,6 +298,41 @@ export const useCollectionStore = defineStore({
                 this.loading = false
             }
         },
+        async addTracksToCollection(collectionId, trackType) {
+            const sessionStore = useSessionStore()
+            if (collectionId === undefined) {
+                return
+            }
+
+            this.loading = true
+            try {
+                const searchFilterParams = this.getSearchFilterParams()
+                const collectionUrl = `${BASE_API_URL}/api/v1/collections/${collectionId}/tracks?search_filter=${encodeURIComponent(
+                    JSON.stringify(searchFilterParams)
+                )}&track_type=${trackType}`
+                const response = await fetch(
+                    collectionUrl,
+                    {
+                        method: 'PUT',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            Authorization: `Bearer ${sessionStore.getToken()}`
+                        }
+                    }
+                )
+
+                if (response.status === 401) {
+                    await router.push('/login')
+                }
+
+                const data = await response.json()
+                return data
+            } catch (error) {
+                this.error = error
+            } finally {
+                this.loading = false
+            }
+        },
         async removeTrackFromCollection(collectionId, trackId) {
             const sessionStore = useSessionStore()
             this.loading = true
@@ -308,6 +362,41 @@ export const useCollectionStore = defineStore({
                 //CLOSE MODAL
                 // this.collectionIdToAddTrackTo = undefined
                 // this.trackIdToAddToCollection = undefined
+            }
+        },
+        async removeTracksFromCollection(collectionId, trackType) {
+            const sessionStore = useSessionStore()
+            if (collectionId === undefined) {
+                return
+            }
+
+            this.loading = true
+            try {
+                const searchFilterParams = this.getSearchFilterParams()
+                const collectionUrl = `${BASE_API_URL}/api/v1/collections/${collectionId}/remove/tracks?search_filter=${encodeURIComponent(
+                    JSON.stringify(searchFilterParams)
+                )}&track_type=${trackType}`
+                const response = await fetch(
+                    collectionUrl,
+                    {
+                        method: 'PATCH',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            Authorization: `Bearer ${sessionStore.getToken()}`
+                        }
+                    }
+                )
+
+                if (response.status === 401) {
+                    await router.push('/login')
+                }
+
+                const data = await response.json()
+                return data
+            } catch (error) {
+                this.error = error
+            } finally {
+                this.loading = false
             }
         },
         async deleteCollection(collectionId) {
