@@ -774,7 +774,13 @@ function onDragStart($event, track) {
         <div v-if="filters" class="border-b dark:border-b dark:border-black">   
             <Filters :filtersettings="filtersettings" @updateFilters="handleUpdateFilter"></Filters>
         </div>
-        <template v-if="router.currentRoute.value.name === 'collection'">
+        <template v-if="router.currentRoute.value.name === 'track' && trackStore.track">
+            <div class="p-4 pt-3 text-sm h-[44px] dark:h-[45px] bg-gradient-to-b from-gray-100 dark:from-ngreyblackhover border-b dark:border-black flex font-bold capitalize">
+                <font-awesome-icon @click="gotoLibrary" icon="arrow-left" size="xl" class="ml-3 mr-6 cursor-pointer hover:text-ngreenhover" />
+                {{ trackStore.track.track_type }}
+            </div>
+        </template>
+        <!-- <template v-if="router.currentRoute.value.name === 'collection'">
             <div class="px-4 items-center h-[44px] dark:h-[45px] text-sm bg-gradient-to-b from-gray-100 dark:from-ngreyblackhover border-b dark:border-black flex font-bold">
                 <div v-for="(collection, index) in collectionSelector.collectionSelected" :key="index" class="flex w-full">
                     <font-awesome-icon @click="gotoLibrary" icon="arrow-left" size="xl" class="ml-3 mr-6 cursor-pointer hover:text-ngreenhover" />
@@ -791,26 +797,40 @@ function onDragStart($event, track) {
                     </div>
                 </div>
             </div>
-        </template>
-        <template v-if="router.currentRoute.value.name === 'track' && trackStore.track">
-            <div class="p-4 pt-3 text-sm h-[44px] dark:h-[45px] bg-gradient-to-b from-gray-100 dark:from-ngreyblackhover border-b dark:border-black flex font-bold capitalize">
-                <font-awesome-icon @click="gotoLibrary" icon="arrow-left" size="xl" class="ml-3 mr-6 cursor-pointer hover:text-ngreenhover" />
-                {{ trackStore.track.track_type }}
-            </div>
-        </template>
-        <template v-if="router.currentRoute.value.name === 'library'">
+        </template> -->
+        <template v-if="router.currentRoute.value.name === 'library' || router.currentRoute.value.name === 'collection'">
             <div class="px-4 py-1.5 pb-2 text-sm h-[44px] dark:h-[45px] bg-gradient-to-b from-gray-100 dark:from-ngreyblackhover border-b dark:border-black flex font-bold">
                 <div class="flex gap-2 w-full">
-                    <div class="py-1.5">
-                        <template v-if="selectedTracks.length === 0"> 
-                            {{ trackStore.tracks.length }} Results
-                        </template>
-                        <template v-else>
-                            {{ selectedTracks.length }} selected
+                    <div class="w-full">
+                        <div class="mr-auto py-1.5" v-if="router.currentRoute.value.name === 'library'">
+                            <template v-if="selectedTracks.length === 0"> 
+                                {{ trackStore.tracks.length }} Results
+                            </template>
+                            <template v-else>
+                                {{ selectedTracks.length }} selected
+                            </template>
+                        </div>
+                        <template v-if="router.currentRoute.value.name === 'collection'">
+                            <div v-for="(collection, index) in collectionSelector.collectionSelected" :key="index" class="flex w-full">
+                                <div class="py-1">
+                                    <font-awesome-icon @click="gotoLibrary" icon="arrow-left" size="xl" class="ml-3 mr-6 cursor-pointer hover:text-ngreenhover" />
+                                    {{ collection.name }} {{ collection.size > 0 ? `(${collection.size} tracks)` : '' }}
+                                </div>
+                                <div class="flex gap-2 ml-auto">
+                                    <button @click="browserStore.collectionModalEdit = collection; browserStore.collectionModal = true;" @click.stop class="whitespace-nowrap text-xs font-medium border dark:border-gray-700 hover:border-npurple rounded-md cursor-pointer px-3 py-1 text-gray-700 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-100">
+                                        <font-awesome-icon icon="pen" />
+                                        <span class="ml-2 mobilehide">Edit</span>
+                                    </button>
+                                    <button @click="downloadCollection(collection)" class="whitespace-nowrap text-xs font-medium border dark:border-gray-700 hover:border-npurple rounded-md cursor-pointer px-3 py-1 text-gray-700 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-100" @click.stop>
+                                        <font-awesome-icon icon="download" />
+                                        <span class="ml-2 mobilehide">Export</span>
+                                    </button>
+                                </div>
+                            </div>
                         </template>
                     </div>
                     <template v-if="selectedTracks.length === 0"> 
-                        <button @click="bulkContextMenu = !bulkContextMenu" class="text-sm font-medium ml-auto border dark:border-gray-700 hover:border-npurple rounded-md cursor-pointer px-3 py-1 text-gray-700 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-100" @click.stop>
+                        <button @click="bulkContextMenu = !bulkContextMenu" class="whitespace-nowrap text-xs font-medium border dark:border-gray-700 hover:border-npurple rounded-md cursor-pointer px-3 py-1 text-gray-700 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-100" @click.stop>
                             <font-awesome-icon icon="pen" class="mr-1" />
                             Edit all
                         </button>
@@ -820,7 +840,7 @@ function onDragStart($event, track) {
                         </div>
                     </template>
                     <template v-else> 
-                        <button @click="bulkContextMenu = !bulkContextMenu" class="text-sm font-medium ml-auto border dark:border-gray-700 hover:border-npurple rounded-md cursor-pointer px-3 py-1 text-gray-700 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-100" @click.stop>
+                        <button @click="bulkContextMenu = !bulkContextMenu" class="whitespace-nowrap text-xs font-medium border dark:border-gray-700 hover:border-npurple rounded-md cursor-pointer px-3 py-1 text-gray-700 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-100" @click.stop>
                             <font-awesome-icon icon="pen" class="mr-1" />
                             Edit selected
                         </button>
@@ -829,7 +849,7 @@ function onDragStart($event, track) {
                             <div class="flex p-3 hover:bg-gray-200 dark:hover:bg-[#3e3e3e] rounded cursor-pointer" @click="collectionTrack.value = 'selection'; browserStore.collectionModal = true; bulkContextMenu = false"><div class="w-6"><font-awesome-icon icon="bars" class="mt-0.5" /></div>Add selected to collection</div>
                         </div>
                     </template>
-                    <button @click="searchResultTableRowsConfigModalShow()" class="text-sm font-medium border dark:border-gray-700 hover:border-npurple rounded-md cursor-pointer px-3 py-1 text-gray-700 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-100" @click.stop>
+                    <button @click="searchResultTableRowsConfigModalShow()" class="whitespace-nowrap text-xs font-medium border dark:border-gray-700 hover:border-npurple rounded-md cursor-pointer px-3 py-1 text-gray-700 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-100" @click.stop>
                         <font-awesome-icon icon="table-columns" class="mr-1" />
                         Display
                     </button>
