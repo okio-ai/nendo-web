@@ -247,8 +247,6 @@ const trackCreationModalClose = async (response) => {
 
 
 // Row Display
-
-
 const showTrackTitleWithFallback = (track, index) => {
     if (track.meta && track.meta.title){ 
         return track.meta.title
@@ -692,6 +690,15 @@ async function getTracks() {
         trackStore.track.plugin_data = metafake
     }
 }
+
+function onDragStart($event, track) {
+    if (selectedTracks.value.length === 0) {
+        browserStore.draggableTracks = [track]
+    } else {
+        browserStore.draggableTracks = selectedTracks.value
+    }
+}
+
 </script>
 
 <template>
@@ -763,7 +770,13 @@ async function getTracks() {
         <div v-if="filters" class="border-b dark:border-b dark:border-black">   
             <Filters :filtersettings="filtersettings" @updateFilters="handleUpdateFilter"></Filters>
         </div>
-        <template v-if="router.currentRoute.value.name === 'collection'">
+        <template v-if="router.currentRoute.value.name === 'track' && trackStore.track">
+            <div class="p-4 pt-3 text-sm h-[44px] dark:h-[45px] bg-gradient-to-b from-gray-100 dark:from-ngreyblackhover border-b dark:border-black flex font-bold capitalize">
+                <font-awesome-icon @click="gotoLibrary" icon="arrow-left" size="xl" class="ml-3 mr-6 cursor-pointer hover:text-ngreenhover" />
+                {{ trackStore.track.track_type }}
+            </div>
+        </template>
+        <!-- <template v-if="router.currentRoute.value.name === 'collection'">
             <div class="px-4 items-center h-[44px] dark:h-[45px] text-sm bg-gradient-to-b from-gray-100 dark:from-ngreyblackhover border-b dark:border-black flex font-bold">
                 <div v-for="(collection, index) in collectionSelector.collectionSelected" :key="index" class="flex w-full">
                     <font-awesome-icon @click="gotoLibrary" icon="arrow-left" size="xl" class="ml-3 mr-6 cursor-pointer hover:text-ngreenhover" />
@@ -780,26 +793,40 @@ async function getTracks() {
                     </div>
                 </div>
             </div>
-        </template>
-        <template v-if="router.currentRoute.value.name === 'track' && trackStore.track">
-            <div class="p-4 pt-3 text-sm h-[44px] dark:h-[45px] bg-gradient-to-b from-gray-100 dark:from-ngreyblackhover border-b dark:border-black flex font-bold capitalize">
-                <font-awesome-icon @click="gotoLibrary" icon="arrow-left" size="xl" class="ml-3 mr-6 cursor-pointer hover:text-ngreenhover" />
-                {{ trackStore.track.track_type }}
-            </div>
-        </template>
-        <template v-if="router.currentRoute.value.name === 'library'">
+        </template> -->
+        <template v-if="router.currentRoute.value.name === 'library' || router.currentRoute.value.name === 'collection'">
             <div class="px-4 py-1.5 pb-2 text-sm h-[44px] dark:h-[45px] bg-gradient-to-b from-gray-100 dark:from-ngreyblackhover border-b dark:border-black flex font-bold">
                 <div class="flex gap-2 w-full">
-                    <div class="py-1.5">
-                        <template v-if="!selectedTracks.length"> 
-                            {{ trackStore.num_results }} Results
-                        </template>
-                        <template v-else>
-                            {{ selectedTracks.length }} selected
+                    <div class="w-full">
+                        <div class="mr-auto py-1.5" v-if="router.currentRoute.value.name === 'library'">
+                            <template v-if="!selectedTracks.length"> 
+                                {{ trackStore.num_results }} Results
+                            </template>
+                            <template v-else>
+                                {{ selectedTracks.length }} selected
+                            </template>
+                        </div>
+                        <template v-if="router.currentRoute.value.name === 'collection'">
+                            <div v-for="(collection, index) in collectionSelector.collectionSelected" :key="index" class="flex w-full">
+                                <div class="py-1">
+                                    <font-awesome-icon @click="gotoLibrary" icon="arrow-left" size="xl" class="ml-3 mr-6 cursor-pointer hover:text-ngreenhover" />
+                                    {{ collection.name }} {{ collection.size > 0 ? `(${collection.size} tracks)` : '' }}
+                                </div>
+                                <div class="flex gap-2 ml-auto">
+                                    <button @click="browserStore.collectionModalEdit = collection; browserStore.collectionModal = true;" @click.stop class="whitespace-nowrap text-xs font-medium border dark:border-gray-700 hover:border-npurple rounded-md cursor-pointer px-3 py-1 text-gray-700 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-100">
+                                        <font-awesome-icon icon="pen" />
+                                        <span class="ml-2 mobilehide">Edit</span>
+                                    </button>
+                                    <button @click="downloadCollection(collection)" class="whitespace-nowrap text-xs font-medium border dark:border-gray-700 hover:border-npurple rounded-md cursor-pointer px-3 py-1 text-gray-700 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-100" @click.stop>
+                                        <font-awesome-icon icon="download" />
+                                        <span class="ml-2 mobilehide">Export</span>
+                                    </button>
+                                </div>
+                            </div>
                         </template>
                     </div>
                     <template v-if="selectedTracks.length === 0"> 
-                        <button @click="bulkContextMenu = !bulkContextMenu" class="text-sm font-medium ml-auto border dark:border-gray-700 hover:border-npurple rounded-md cursor-pointer px-3 py-1 text-gray-700 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-100" @click.stop>
+                        <button @click="bulkContextMenu = !bulkContextMenu" class="whitespace-nowrap text-xs font-medium border dark:border-gray-700 hover:border-npurple rounded-md cursor-pointer px-3 py-1 text-gray-700 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-100" @click.stop>
                             <font-awesome-icon icon="pen" class="mr-1" />
                             Edit all
                         </button>
@@ -809,7 +836,7 @@ async function getTracks() {
                         </div>
                     </template>
                     <template v-else> 
-                        <button @click="bulkContextMenu = !bulkContextMenu" class="text-sm font-medium ml-auto border dark:border-gray-700 hover:border-npurple rounded-md cursor-pointer px-3 py-1 text-gray-700 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-100" @click.stop>
+                        <button @click="bulkContextMenu = !bulkContextMenu" class="whitespace-nowrap text-xs font-medium border dark:border-gray-700 hover:border-npurple rounded-md cursor-pointer px-3 py-1 text-gray-700 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-100" @click.stop>
                             <font-awesome-icon icon="pen" class="mr-1" />
                             Edit selected
                         </button>
@@ -818,7 +845,7 @@ async function getTracks() {
                             <div class="flex p-3 hover:bg-gray-200 dark:hover:bg-[#3e3e3e] rounded cursor-pointer" @click="collectionTrack.value = 'selection'; browserStore.collectionModal = true; bulkContextMenu = false"><div class="w-6"><font-awesome-icon icon="bars" class="mt-0.5" /></div>Add selected to collection</div>
                         </div>
                     </template>
-                    <button @click="searchResultTableRowsConfigModalShow()" class="text-sm font-medium border dark:border-gray-700 hover:border-npurple rounded-md cursor-pointer px-3 py-1 text-gray-700 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-100" @click.stop>
+                    <button @click="searchResultTableRowsConfigModalShow()" class="whitespace-nowrap text-xs font-medium border dark:border-gray-700 hover:border-npurple rounded-md cursor-pointer px-3 py-1 text-gray-700 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-100" @click.stop>
                         <font-awesome-icon icon="table-columns" class="mr-1" />
                         Display
                     </button>
@@ -978,7 +1005,7 @@ async function getTracks() {
                     </thead>
                     <tbody>
                         <template v-for="(track, index) in trackStore.tracks" :key="track.id">
-                            <tr class="select-none group text-sm cursor-pointer hover:bg-gray-100 dark:hover:bg-ngreytransparent" :class="{ 'bg-gray-100 dark:bg-ngreytransparent border-t dark:border-black' : track.isOpen, 'bg-blue-100 dark:bg-blue-800' : isTrackSelected(track.id)}" @click="trackDetailsToggle(track, $event)" @mouseenter="contextMenuClose(track)">
+                            <tr class="select-none group text-sm cursor-pointer hover:bg-gray-100 dark:hover:bg-ngreytransparent draggable" draggable="true" @dragstart="onDragStart($event, track)" :class="{ 'bg-gray-100 dark:bg-ngreytransparent border-t dark:border-black' : track.isOpen, 'bg-blue-100 dark:bg-blue-800' : isTrackSelected(track)}" @click="trackDetailsToggle(track, $event)" @mouseenter="contextMenuClose(track)">
                                 <td class="w-5 py-2 px-4 text-right min-w-[50px] relative" @click="track_play(track)" @click.stop>
                                     <div
                                         class="h-[40px] w-[40px] rounded bg-cover relative cursor-pointer"
@@ -998,7 +1025,7 @@ async function getTracks() {
                                     </div>
                                 </td>
                                 <td class="pr-2 pl-0">
-                                    <div class="font-medium hover:underline inline-block" @click="gotoTrack(track)" @click.stop :class="{'text-ngreenhover': track.id === currentTrack.id}">
+                                    <div class="font-medium hover:underline inline-block dragclone" @click="gotoTrack(track)" @click.stop :class="{'text-ngreenhover': track.id === currentTrack.id}">
                                         {{ showTrackTitleWithFallback(track, index) }}
                                     </div>
                                     <div>
@@ -1181,5 +1208,8 @@ input[type="search"]::-webkit-search-decoration,
 input[type="search"]::-webkit-search-cancel-button,
 input[type="search"]::-webkit-search-results-button,
 input[type="search"]::-webkit-search-results-decoration { display: none; }
-
+.draggable {
+    cursor: grab;
+    touch-action: none; /* This line is important to make it work on touch devices */
+}
 </style>

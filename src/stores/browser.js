@@ -17,6 +17,7 @@ export const useBrowserStore = defineStore({
         audioPlayerSeek: 0,
         audioEngine: null,
         isMobile: false,
+        draggableTracks: [],
         export: {
             modal: false,
             track: null,
