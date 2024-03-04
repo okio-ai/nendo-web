@@ -201,7 +201,7 @@ const collectionModalClose = async (data) => {
     } else {
         router.push({ path: '/library/' })
     }
-    if(data.addTrack.value && data.track.value !== 'bulk') {
+    if(data.addTrack.value && data.track.value !== 'bulk' && data.track.value !== 'selection') {
         await trackStore.fetchTrack(data.track.value.id)
         // update track on collection assign
         if (router.currentRoute.value.name === 'library' || router.currentRoute.value.name === 'collection') { 
