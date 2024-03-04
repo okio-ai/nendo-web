@@ -247,8 +247,6 @@ const trackCreationModalClose = async (response) => {
 
 
 // Row Display
-
-
 const showTrackTitleWithFallback = (track, index) => {
     if (track.meta && track.meta.title){ 
         return track.meta.title
@@ -696,6 +694,15 @@ async function getTracks() {
         trackStore.track.plugin_data = metafake
     }
 }
+
+function onDragStart($event, track) {
+    if (selectedTracks.value.length === 0) {
+        browserStore.draggableTracks = [track]
+    } else {
+        browserStore.draggableTracks = selectedTracks.value
+    }
+}
+
 </script>
 
 <template>
@@ -982,7 +989,7 @@ async function getTracks() {
                     </thead>
                     <tbody>
                         <template v-for="(track, index) in trackStore.tracks" :key="track.id">
-                            <tr class="select-none group text-sm cursor-pointer hover:bg-gray-100 dark:hover:bg-ngreytransparent" :class="{ 'bg-gray-100 dark:bg-ngreytransparent border-t dark:border-black' : track.isOpen, 'bg-blue-100 dark:bg-blue-800' : isTrackSelected(track)}" @click="trackDetailsToggle(track, $event)" @mouseenter="contextMenuClose(track)">
+                            <tr class="select-none group text-sm cursor-pointer hover:bg-gray-100 dark:hover:bg-ngreytransparent draggable" draggable="true" @dragstart="onDragStart($event, track)" :class="{ 'bg-gray-100 dark:bg-ngreytransparent border-t dark:border-black' : track.isOpen, 'bg-blue-100 dark:bg-blue-800' : isTrackSelected(track)}" @click="trackDetailsToggle(track, $event)" @mouseenter="contextMenuClose(track)">
                                 <td class="w-5 py-2 px-4 text-right min-w-[50px] relative" @click="track_play(track)" @click.stop>
                                     <div
                                         class="h-[40px] w-[40px] rounded bg-cover relative cursor-pointer"
@@ -1002,7 +1009,7 @@ async function getTracks() {
                                     </div>
                                 </td>
                                 <td class="pr-2 pl-0">
-                                    <div class="font-medium hover:underline inline-block" @click="gotoTrack(track)" @click.stop :class="{'text-ngreenhover': track.id === currentTrack.id}">
+                                    <div class="font-medium hover:underline inline-block dragclone" @click="gotoTrack(track)" @click.stop :class="{'text-ngreenhover': track.id === currentTrack.id}">
                                         {{ showTrackTitleWithFallback(track, index) }}
                                     </div>
                                     <div>
@@ -1185,5 +1192,8 @@ input[type="search"]::-webkit-search-decoration,
 input[type="search"]::-webkit-search-cancel-button,
 input[type="search"]::-webkit-search-results-button,
 input[type="search"]::-webkit-search-results-decoration { display: none; }
-
+.draggable {
+    cursor: grab;
+    touch-action: none; /* This line is important to make it work on touch devices */
+}
 </style>
