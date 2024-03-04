@@ -172,16 +172,10 @@ const saveTrack = async () => {
     emit('modalClosed')
 }
 
-const newTrack = async () => {
-    trackStore.trackTemp = track
-    trackStore.saveTrack(true) 
-    emit('modalClosed')
-}
 
 const closeModal = async () => {
-    if(!fileUploadActive.value) {
-        emit('modalClosed')
-    }
+    fileUploadActive.value = false;
+    emit('modalClosed')
 }
 
 const autoResize = (event) => {
@@ -235,7 +229,6 @@ const afterLeave = (el) => {
                     </option>
                 </select>
             </div>
-            <font-awesome-icon icon="x" class="float-right mt-1 cursor-pointer hover:text-ngreenhover" @click="closeModal" />
             <!-- <button
                 class="top-2 ml-auto text-gray-400 cursor-pointer hover:text-gray-900"
                 @click="closeModal()"
