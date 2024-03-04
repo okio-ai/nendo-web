@@ -297,6 +297,40 @@ export const useCollectionStore = defineStore({
                 this.loading = false
             }
         },
+        async addSelectedTracksToCollection(collectionId, trackIds) {
+            const sessionStore = useSessionStore()
+            if (collectionId === undefined) {
+                return
+            }
+            console.log(trackIds)
+
+            this.loading = true
+            try {
+                const collectionUrl = `${BASE_API_URL}/api/v1/collections/${collectionId}/tracks/selected`
+                const response = await fetch(
+                    collectionUrl,
+                    {
+                        method: 'PUT',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            Authorization: `Bearer ${sessionStore.getToken()}`
+                        },
+                        body: JSON.stringify(trackIds)
+                    }
+                )
+
+                if (response.status === 401) {
+                    await router.push('/login')
+                }
+
+                const data = await response.json()
+                return data
+            } catch (error) {
+                this.error = error
+            } finally {
+                this.loading = false
+            }
+        },
         async addTracksToCollection(collectionId, options = {}) {
             const {
                 relatedCollectionId = null,
@@ -365,6 +399,39 @@ export const useCollectionStore = defineStore({
                 //CLOSE MODAL
                 // this.collectionIdToAddTrackTo = undefined
                 // this.trackIdToAddToCollection = undefined
+            }
+        },
+        async removeSelectedTracksFromCollection(collectionId, trackIds) {
+            const sessionStore = useSessionStore()
+            if (collectionId === undefined) {
+                return
+            }
+
+            this.loading = true
+            try {
+                const collectionUrl = `${BASE_API_URL}/api/v1/collections/${collectionId}/tracks/selected`
+                const response = await fetch(
+                    collectionUrl,
+                    {
+                        method: 'PATCH',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            Authorization: `Bearer ${sessionStore.getToken()}`
+                        },
+                        body: JSON.stringify(trackIds)
+                    }
+                )
+
+                if (response.status === 401) {
+                    await router.push('/login')
+                }
+
+                const data = await response.json()
+                return data
+            } catch (error) {
+                this.error = error
+            } finally {
+                this.loading = false
             }
         },
         async removeTracksFromCollection(collectionId, trackType) {

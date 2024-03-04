@@ -85,6 +85,8 @@ export const useTrackStore = defineStore({
             const sessionStore = useSessionStore()
             const {
                 similarTo = null,
+                relationshipType = null,
+                relationship_id = null,
                 fetch_related = false,
                 track_id = null,
                 collection_id = null,
@@ -146,13 +148,13 @@ export const useTrackStore = defineStore({
 
                 const result = await response.json()
                 this.hasNext = result.has_next
+                this.num_results = result.data.num_results
 
                 if (!append) {
                     this.tracks = result.data.tracks
                 } else {
                     this.tracks.push(...result.data.tracks)
                 }
-                this.num_results = result.data.num_results
             } catch (error) {
                 this.error = error
             } finally {
@@ -183,9 +185,8 @@ export const useTrackStore = defineStore({
                     await router.push('/library')
                 }
 
-                const data = await response.json()
-                const result = data.data
-                this.track = result
+                const result = await response.json()
+                this.track = result.data
             } catch (error) {
                 this.error = error
             } finally {
@@ -270,6 +271,33 @@ export const useTrackStore = defineStore({
                         }
                     }
                 )
+
+                if (response.status === 401) {
+                    await router.push('/login')
+                }
+
+                const data = await response.json()
+                return data
+            } catch (error) {
+                this.error = error
+            } finally {
+                this.loading = false
+            }
+        },
+        async deleteSelectedTracks(trackIds) {
+            const sessionStore = useSessionStore()
+            this.loading = true
+            try {
+                const searchFilterParams = this.getSearchFilterParams()
+                let tracksUrl = `${BASE_API_URL}/api/v1/tracks/selected`
+                const response = await fetch(tracksUrl, {
+                    method: 'DELETE',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        Authorization: `Bearer ${sessionStore.getToken()}`
+                    },
+                    body: JSON.stringify(trackIds)
+                })
 
                 if (response.status === 401) {
                     await router.push('/login')
