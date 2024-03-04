@@ -1005,7 +1005,7 @@ function onDragStart($event, track) {
                     </thead>
                     <tbody>
                         <template v-for="(track, index) in trackStore.tracks" :key="track.id">
-                            <tr class="select-none group text-sm cursor-pointer hover:bg-gray-100 dark:hover:bg-ngreytransparent draggable" draggable="true" @dragstart="onDragStart($event, track)" :class="{ 'bg-gray-100 dark:bg-ngreytransparent border-t dark:border-black' : track.isOpen, 'bg-blue-100 dark:bg-blue-800' : isTrackSelected(track)}" @click="trackDetailsToggle(track, $event)" @mouseenter="contextMenuClose(track)">
+                            <tr class="select-none group text-sm cursor-pointer hover:bg-gray-100 dark:hover:bg-ngreytransparent draggable" draggable="true" @dragstart="onDragStart($event, track)" :class="{ 'bg-gray-100 dark:bg-ngreytransparent border-t dark:border-black' : track.isOpen, 'bg-blue-100 dark:bg-blue-800' : isTrackSelected(track.id)}" @click="trackDetailsToggle(track, $event)" @mouseenter="contextMenuClose(track)">
                                 <td class="w-5 py-2 px-4 text-right min-w-[50px] relative" @click="track_play(track)" @click.stop>
                                     <div
                                         class="h-[40px] w-[40px] rounded bg-cover relative cursor-pointer"
