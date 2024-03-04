@@ -776,24 +776,6 @@ function onDragStart($event, track) {
                 {{ trackStore.track.track_type }}
             </div>
         </template>
-        <!-- <template v-if="router.currentRoute.value.name === 'collection'">
-            <div class="px-4 items-center h-[44px] dark:h-[45px] text-sm bg-gradient-to-b from-gray-100 dark:from-ngreyblackhover border-b dark:border-black flex font-bold">
-                <div v-for="(collection, index) in collectionSelector.collectionSelected" :key="index" class="flex w-full">
-                    <font-awesome-icon @click="gotoLibrary" icon="arrow-left" size="xl" class="ml-3 mr-6 cursor-pointer hover:text-ngreenhover" />
-                    {{ collection.name }} {{ collection.size > 0 ? `(${collection.size} tracks)` : '' }}
-                    <div class="flex gap-2 ml-auto">
-                        <div @click="browserStore.collectionModalEdit = collection; browserStore.collectionModal = true;" @click.stop class="text-sm rounded-md px-2 items-center hover:text-npurple cursor-pointer font-medium">
-                            <font-awesome-icon icon="pen" />
-                            <span class="ml-2 mobilehide">Edit</span>
-                        </div>
-                        <div @click="downloadCollection(collection)" @click.stop class="text-sm rounded-md px-2 items-center hover:text-npurple cursor-pointer font-medium">
-                            <font-awesome-icon icon="download" />
-                            <span class="ml-2 mobilehide">Export</span>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </template> -->
         <template v-if="router.currentRoute.value.name === 'library' || router.currentRoute.value.name === 'collection'">
             <div class="px-4 py-1.5 pb-2 text-sm h-[44px] dark:h-[45px] bg-gradient-to-b from-gray-100 dark:from-ngreyblackhover border-b dark:border-black flex font-bold">
                 <div class="flex gap-2 w-full">
