@@ -12,6 +12,7 @@ export const useTrackStore = defineStore({
     id: 'track',
     state: () => ({
         tracks: [],
+        num_results: 0,
         cursor: 0,
         hasNext: false,
         track: {},
@@ -84,8 +85,6 @@ export const useTrackStore = defineStore({
             const sessionStore = useSessionStore()
             const {
                 similarTo = null,
-                relationshipType = null,
-                relationship_id = null,
                 fetch_related = false,
                 track_id = null,
                 collection_id = null,
@@ -145,14 +144,15 @@ export const useTrackStore = defineStore({
                     useToast().error("Cannot find track embedding. Generate an embeding first.")
                 }
 
-                const data = await response.json()
-                this.hasNext = data.has_next
+                const result = await response.json()
+                this.hasNext = result.has_next
 
                 if (!append) {
-                    this.tracks = data.data
+                    this.tracks = result.data.tracks
                 } else {
-                    this.tracks.push(...data.data)
+                    this.tracks.push(...result.data.tracks)
                 }
+                this.num_results = result.data.num_results
             } catch (error) {
                 this.error = error
             } finally {
