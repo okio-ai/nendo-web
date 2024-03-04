@@ -244,10 +244,10 @@ const trackCreationModalClose = async (response) => {
     }
 }
 
+
+
 // Row Display
-const trackDetailsToggle = (track)  => {
-    track.isOpen = !track.isOpen
-}
+
 
 const showTrackTitleWithFallback = (track, index) => {
     if (track.meta && track.meta.title){ 
@@ -262,9 +262,32 @@ const showTrackTitleWithFallback = (track, index) => {
     return `Track ${index}`
 }
 
-const toggleRow = (index) => {
-    trackStore.tracks[index].isOpen = !trackStore.tracks[index].isOpen;
+// const trackDetailsToggle = (track)  => {
+//     track.isOpen = !track.isOpen
+// }
+
+// Track selection
+const trackDetailsToggle = (track, event) => {
+    event.stopPropagation()
+
+    if (event.shiftKey) {
+        const index = selectedTracks.value.findIndex(t => t.id === track.id);
+        if (index === -1) {
+            selectedTracks.value.push(track);
+        } else {
+            selectedTracks.value.splice(index, 1);
+        }
+    } else {
+        selectedTracks.value = []
+        track.isOpen = !track.isOpen
+        // trackStore.tracks[index].isOpen = !trackStore.tracks[index].isOpen;
+    }
 }
+
+const isTrackSelected = computed(() => {
+    return (track) => selectedTracks.value.includes(track);
+})
+
 
 // Audio Playback
 function track_play(track) {
@@ -434,27 +457,6 @@ const handleKeyPress = (event) => {
     }
 }
 
-// Track selection
-const trackSelectToggle = (track, index, event) => {
-    event.stopPropagation()
-
-    if (event.shiftKey) {
-        const index = selectedTracks.value.findIndex(t => t.id === track.id);
-        if (index === -1) {
-            selectedTracks.value.push(track);
-        } else {
-            selectedTracks.value.splice(index, 1);
-        }
-    } else {
-        selectedTracks.value = []
-        toggleRow(index)
-    }
-}
-
-const isTrackSelected = computed(() => {
-    return (track) => selectedTracks.value.includes(track);
-})
-
 // Search
 const handleSearchInput = debounce((event) => {
     searchText.value = event.target.value
@@ -523,6 +525,22 @@ const bulkDelete = async () => {
             await collectionStore.fetchCollection(route.params.id)
             collectionSelector.value.collectionSelected = [collectionStore.collection]
         }
+        getTracks()
+    }
+}
+
+const selectionDelete = async () => {
+    let text = `Delete all selected Tracks${router.currentRoute.value.name === 'collection' ? ' in this collection' : ''}?`
+    if (confirm(text) == true) {
+        // bulkContextMenu.value = false
+        // await trackStore.deleteTracks({
+        //     collection_id: router.currentRoute.value.name === 'collection' ? route.params.id : "",
+        //     track_type: trackTypeSettings.value.value
+        // })
+        // if (router.currentRoute.value.name === 'collection'){
+        //     await collectionStore.fetchCollection(route.params.id)
+        //     collectionSelector.value.collectionSelected = [collectionStore.collection]
+        // }
         getTracks()
     }
 }
@@ -772,6 +790,44 @@ async function getTracks() {
                 {{ trackStore.track.track_type }}
             </div>
         </template>
+        <template v-if="router.currentRoute.value.name === 'library'">
+            <div class="px-4 py-1.5 pb-2 text-sm h-[44px] dark:h-[45px] bg-gradient-to-b from-gray-100 dark:from-ngreyblackhover border-b dark:border-black flex font-bold">
+                <div class="flex gap-2 w-full">
+                    <div class="py-1.5">
+                        <template v-if="selectedTracks.length === 0"> 
+                            {{ trackStore.tracks.length }} Results
+                        </template>
+                        <template v-else>
+                            {{ selectedTracks.length }} selected
+                        </template>
+                    </div>
+                    <template v-if="selectedTracks.length === 0"> 
+                        <button @click="bulkContextMenu = !bulkContextMenu" class="text-sm font-medium ml-auto border dark:border-gray-700 hover:border-npurple rounded-md cursor-pointer px-3 py-1 text-gray-700 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-100" @click.stop>
+                            <font-awesome-icon icon="pen" class="mr-1" />
+                            Edit all
+                        </button>
+                        <div v-show="bulkContextMenu" @click="bulkContextMenu = false" @click.stop class="group-hover:visible origin-top-right absolute right-4 mt-8 w-56 p-1 rounded-md shadow-lg bg-gray-100 dark:bg-[#282828] ring-1 ring-black ring-opacity-5 focus:outline-none z-50">
+                            <div class="flex p-3 hover:bg-gray-200 dark:hover:bg-[#3e3e3e] rounded cursor-pointer" @click="bulkDelete()"><div class="w-6"><font-awesome-icon icon="x" class="mt-0.5" /></div>Delete All</div>
+                            <div class="flex p-3 hover:bg-gray-200 dark:hover:bg-[#3e3e3e] rounded cursor-pointer" @click="collectionTrack.value = 'bulk'; browserStore.collectionModal = true; bulkContextMenu = false"><div class="w-6"><font-awesome-icon icon="bars" class="mt-0.5" /></div>Add all to collection</div>
+                        </div>
+                    </template>
+                    <template v-else> 
+                        <button @click="bulkContextMenu = !bulkContextMenu" class="text-sm font-medium ml-auto border dark:border-gray-700 hover:border-npurple rounded-md cursor-pointer px-3 py-1 text-gray-700 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-100" @click.stop>
+                            <font-awesome-icon icon="pen" class="mr-1" />
+                            Edit selected
+                        </button>
+                        <div v-show="bulkContextMenu" @click="bulkContextMenu = false" @click.stop class="group-hover:visible origin-top-right absolute right-4 mt-8 w-56 p-1 rounded-md shadow-lg bg-gray-100 dark:bg-[#282828] ring-1 ring-black ring-opacity-5 focus:outline-none z-50">
+                            <div class="flex p-3 hover:bg-gray-200 dark:hover:bg-[#3e3e3e] rounded cursor-pointer" @click="selectionDelete()"><div class="w-6"><font-awesome-icon icon="x" class="mt-0.5" /></div>Delete selection</div>
+                            <div class="flex p-3 hover:bg-gray-200 dark:hover:bg-[#3e3e3e] rounded cursor-pointer" @click="collectionTrack.value = 'selection'; browserStore.collectionModal = true; bulkContextMenu = false"><div class="w-6"><font-awesome-icon icon="bars" class="mt-0.5" /></div>Add selected to collection</div>
+                        </div>
+                    </template>
+                    <button @click="searchResultTableRowsConfigModalShow()" class="text-sm font-medium border dark:border-gray-700 hover:border-npurple rounded-md cursor-pointer px-3 py-1 text-gray-700 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-100" @click.stop>
+                        <font-awesome-icon icon="table-columns" class="mr-1" />
+                        Display
+                    </button>
+                </div>
+            </div>
+        </template>
         <div class="flex-1 overflow-auto" @click="trackStore.track.contextMenu = false" ref="scrollComponent">
             <template v-if="router.currentRoute.value.name === 'track' && trackStore.track">
                 <div class="flex p-4 gap-4 items-center group">
@@ -840,18 +896,6 @@ async function getTracks() {
             </template>
 
             <div class="mb-20">
-                <div class="p-4 pt-1.5 pr-2 h-[44px] dark:h-[45px] text-sm border-b dark:border-black origin-top-right absolute right-24 font-bold">
-                    <div class="items-center gap-6 group-hover:visible">
-                        <button @click="bulkContextMenu = !bulkContextMenu" class="cursor-pointer px-4 text-gray-600 dark:hover:text-gray-100" @click.stop>
-                            All
-                            <font-awesome-icon icon="ellipsis-vertical" size="xl" class="ml-3" />
-                        </button>
-                    </div>
-                </div>
-                <div v-show="bulkContextMenu" @click="bulkContextMenu = false" @click.stop class="group-hover:visible origin-top-right absolute right-4 mt-8 w-56 p-1 rounded-md shadow-lg bg-gray-100 dark:bg-[#282828] ring-1 ring-black ring-opacity-5 focus:outline-none z-50">
-                    <div class="flex p-3 hover:bg-gray-200 dark:hover:bg-[#3e3e3e] rounded" @click="bulkDelete()"><div class="w-6"><font-awesome-icon icon="x" class="mt-0.5" /></div>Delete</div>
-                    <div class="flex p-3 hover:bg-gray-200 dark:hover:bg-[#3e3e3e] rounded" @click="collectionTrack.value = 'bulk'; browserStore.collectionModal = true; bulkContextMenu = false"><div class="w-6"><font-awesome-icon icon="bars" class="mt-0.5" /></div>Add to collection</div>
-                </div>
                 <template v-if="searchResultDisplayType === 'grid'">
                     <div class="p-4 pt-1.5 pr-2 h-[44px] dark:h-[45px] text-sm border-b dark:border-black flex font-bold">
                         <div class="mt-1">Items</div>
@@ -931,17 +975,13 @@ async function getTracks() {
                             <template v-for="(row, rowindex) in searchResultTableRows.optionsSelected" :key="rowindex">
                                 <th class="px-2 py-2 dark:pt-2">{{ row.name }}</th>
                             </template>
-                            <th class="px-3 pl-1 py-1.5 dark:pt-1 text-right cursor-pointer hover:text-npurple whitespace-nowrap" @click="searchResultTableRowsConfigModalShow()">
-                                <div class="border dark:border-gray-700 hover:border-npurple rounded-md inline-block py-1 px-2 text-gray-800 dark:text-gray-200 hover:text-npurple">
-                                    <font-awesome-icon icon="table-columns" />
-                                    <span class="mobilehide ml-1">Display</span>
-                                </div>
+                            <th class="px-3 pl-1 py-1.5 dark:pt-1 text-right cursor-pointer hover:text-npurple whitespace-nowrap">
                             </th>
                         </tr>
                     </thead>
                     <tbody>
                         <template v-for="(track, index) in trackStore.tracks" :key="track.id">
-                            <tr class="group text-sm cursor-pointer hover:bg-gray-100 dark:hover:bg-ngreytransparent" :class="{ 'bg-gray-100 dark:bg-ngreytransparent border-t dark:border-black' : track.isOpen, 'bg-blue-100' : isTrackSelected(track)}" @click="trackDetailsToggle(track)" @mouseenter="contextMenuClose(track)">
+                            <tr class="select-none group text-sm cursor-pointer hover:bg-gray-100 dark:hover:bg-ngreytransparent" :class="{ 'bg-gray-100 dark:bg-ngreytransparent border-t dark:border-black' : track.isOpen, 'bg-blue-100 dark:bg-blue-800' : isTrackSelected(track)}" @click="trackDetailsToggle(track, $event)" @mouseenter="contextMenuClose(track)">
                                 <td class="w-5 py-2 px-4 text-right min-w-[50px] relative" @click="track_play(track)" @click.stop>
                                     <div
                                         class="h-[40px] w-[40px] rounded bg-cover relative cursor-pointer"
