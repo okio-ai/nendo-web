@@ -626,6 +626,7 @@ async function getTracks() {
             reset_paging: true
         })
     }
+    console.log(trackStore.num_results)
 
     await getTracksScroll()
 
