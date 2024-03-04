@@ -693,7 +693,7 @@ async function getTracks() {
 
 function onDragStart($event, track) {
     if (selectedTracks.value.length === 0) {
-        browserStore.draggableTracks = [track]
+        browserStore.draggableTracks = [track.id]
     } else {
         browserStore.draggableTracks = selectedTracks.value
     }

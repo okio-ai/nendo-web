@@ -127,11 +127,9 @@ const drop = (event, collection) => {
 };
 
 async function handleDroppedItem (collection) {
-    for(let i=0; i< browserStore.draggableTracks.length; i++) {
-        await collectionStore.addTrackToCollection(
-            collection.id, browserStore.draggableTracks[i].id
-        )
-    }
+    await collectionStore.addSelectedTracksToCollection(
+        collection.id, browserStore.draggableTracks
+    )
     if (browserStore.draggableTracks.length > 0) {
         useToast().success(browserStore.draggableTracks.length + ' tracks added to: ' + collection.name)
     } else {
