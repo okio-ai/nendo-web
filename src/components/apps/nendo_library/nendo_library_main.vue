@@ -201,7 +201,7 @@ const collectionModalClose = async (data) => {
     } else {
         router.push({ path: '/library/' })
     }
-    if(data.addTrack.value && data.track.value !== 'bulk') {
+    if(data.addTrack.value && data.track.value !== 'bulk' && data.track.value !== 'selection') {
         await trackStore.fetchTrack(data.track.value.id)
         // update track on collection assign
         if (router.currentRoute.value.name === 'library' || router.currentRoute.value.name === 'collection') { 
@@ -269,9 +269,9 @@ const trackDetailsToggle = (track, event) => {
     event.stopPropagation()
 
     if (event.shiftKey) {
-        const index = selectedTracks.value.findIndex(t => t.id === track.id);
+        const index = selectedTracks.value.findIndex(tid => tid === track.id);
         if (index === -1) {
-            selectedTracks.value.push(track);
+            selectedTracks.value.push(track.id);
         } else {
             selectedTracks.value.splice(index, 1);
         }
@@ -283,7 +283,7 @@ const trackDetailsToggle = (track, event) => {
 }
 
 const isTrackSelected = computed(() => {
-    return (track) => selectedTracks.value.includes(track);
+    return (trackId) => selectedTracks.value.includes(trackId);
 })
 
 
@@ -530,15 +530,12 @@ const bulkDelete = async () => {
 const selectionDelete = async () => {
     let text = `Delete all selected Tracks${router.currentRoute.value.name === 'collection' ? ' in this collection' : ''}?`
     if (confirm(text) == true) {
-        // bulkContextMenu.value = false
-        // await trackStore.deleteTracks({
-        //     collection_id: router.currentRoute.value.name === 'collection' ? route.params.id : "",
-        //     track_type: trackTypeSettings.value.value
-        // })
-        // if (router.currentRoute.value.name === 'collection'){
-        //     await collectionStore.fetchCollection(route.params.id)
-        //     collectionSelector.value.collectionSelected = [collectionStore.collection]
-        // }
+        bulkContextMenu.value = false
+        await trackStore.deleteSelectedTracks(selectedTracks.value)
+        if (router.currentRoute.value.name === 'collection'){
+            await collectionStore.fetchCollection(route.params.id)
+            collectionSelector.value.collectionSelected = [collectionStore.collection]
+        }
         getTracks()
     }
 }
@@ -624,7 +621,6 @@ async function getTracks() {
             reset_paging: true
         })
     }
-    console.log(trackStore.num_results)
 
     await getTracksScroll()
 
@@ -785,8 +781,8 @@ function onDragStart($event, track) {
                 <div class="flex gap-2 w-full">
                     <div class="w-full">
                         <div class="mr-auto py-1.5" v-if="router.currentRoute.value.name === 'library'">
-                            <template v-if="selectedTracks.length === 0"> 
-                                {{ trackStore.tracks.length }} Results
+                            <template v-if="!selectedTracks.length"> 
+                                {{ trackStore.num_results }} Results
                             </template>
                             <template v-else>
                                 {{ selectedTracks.length }} selected
@@ -901,7 +897,7 @@ function onDragStart($event, track) {
                 </template>
 
                 <div class="p-4 items-center text-sm h-[44px] dark:h-[45px] bg-gradient-to-b from-gray-100 dark:from-ngreyblackhover border-b dark:border-black flex font-bold">
-                    <div>Related</div>
+                    <div>{{ trackStore.num_results }} Related</div>
                 </div>
             </template>
 
@@ -991,7 +987,7 @@ function onDragStart($event, track) {
                     </thead>
                     <tbody>
                         <template v-for="(track, index) in trackStore.tracks" :key="track.id">
-                            <tr class="select-none group text-sm cursor-pointer hover:bg-gray-100 dark:hover:bg-ngreytransparent draggable" draggable="true" @dragstart="onDragStart($event, track)" :class="{ 'bg-gray-100 dark:bg-ngreytransparent border-t dark:border-black' : track.isOpen, 'bg-blue-100 dark:bg-blue-800' : isTrackSelected(track)}" @click="trackDetailsToggle(track, $event)" @mouseenter="contextMenuClose(track)">
+                            <tr class="select-none group text-sm cursor-pointer hover:bg-gray-100 dark:hover:bg-ngreytransparent draggable" draggable="true" @dragstart="onDragStart($event, track)" :class="{ 'bg-gray-100 dark:bg-ngreytransparent border-t dark:border-black' : track.isOpen, 'bg-blue-100 dark:bg-blue-800' : isTrackSelected(track.id)}" @click="trackDetailsToggle(track, $event)" @mouseenter="contextMenuClose(track)">
                                 <td class="w-5 py-2 px-4 text-right min-w-[50px] relative" @click="track_play(track)" @click.stop>
                                     <div
                                         class="h-[40px] w-[40px] rounded bg-cover relative cursor-pointer"
@@ -1155,7 +1151,7 @@ function onDragStart($event, track) {
         </modal>
     </div>
     <modal :open="browserStore.collectionModal" @update:open="collectionModalCloseCall()" title="">   
-        <Collection :track="collectionTrack" :trackTypeFilter="trackTypeSettings.value" :collection="collectionStore.collection" @modalClosed="collectionModalClose" ref="collectionModalRef"></Collection>
+        <Collection :track="collectionTrack" :selected-track-ids="selectedTracks" :track-type-filter="trackTypeSettings.value" :collection="collectionStore.collection" @modalClosed="collectionModalClose" ref="collectionModalRef"></Collection>
     </modal>
     <Tools :modalopen="browserStore.toolViewActive" @click="browserStore.toolViewActive = !browserStore.toolViewActive" @modalClosed="browserStore.toolViewActive = false"></Tools>
     <TrackCreation :track="trackCreationTrack" :modalopen="trackCreationModal" @click="trackCreationModal = !trackCreationModal" @modalClosed="trackCreationModalClose"></TrackCreation>

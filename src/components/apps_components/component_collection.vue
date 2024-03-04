@@ -17,6 +17,10 @@ const props = defineProps({
         type: Object,
         required: true
     },
+    selectedTrackIds: {
+        type: Array,
+        required: true
+    },
     trackTypeFilter: {
         type: String,
         required: true
@@ -63,7 +67,7 @@ function setTitle() {
         collectionAddTrack.value = true
 
         collectionAddSelector.value = []
-        if (props.track.value !== 'bulk') {
+        if (props.track.value !== 'bulk' && props.track.value !== 'selection') {
             for (let i=0; i < props.track.value.related_collections.length; i++) {
                 collectionAddSelector.value.push(props.track.value.related_collections[i].target.id)
             }
@@ -164,10 +168,16 @@ async function collectionSelected(collection) {
         if (selectedIndex === -1) {
             collectionAddSelector.value.push(collection.id)
             if (props.track.value === 'bulk'){
-                await addTracksToCollection(
-                    collection,
-                    router.currentRoute.value.name === 'collection' ? route.params.id : '',
-                    props.trackTypeFilter
+                await collectionStore.addTracksToCollection(
+                    collection.id,
+                    {
+                        relatedCollectionId: router.currentRoute.value.name === 'collection' ? route.params.id : '',
+                        trackType: props.trackTypeFilter
+                    }
+                )
+            } else if (props.track.value === 'selection')  {
+                await collectionStore.addSelectedTracksToCollection(
+                    collection.id, props.selectedTrackIds
                 )
             } else {
                 await addTrackToCollection(collection, props.track.value)
@@ -175,7 +185,13 @@ async function collectionSelected(collection) {
         } else {
             collectionAddSelector.value.splice(selectedIndex, 1)
             if (props.track.value === 'bulk'){
-                await removeTracksFromCollection(collection, props.trackTypeFilter)
+                await collectionStore.removeTracksFromCollection(
+                    collection.id, props.trackTypeFilter
+                )
+            } else if (props.track.value === 'selection') {
+                await collectionStore.removeSelectedTracksFromCollection(
+                    collection.id, props.selectedTrackIds
+                )
             } else {
                 await removeTrackFromCollection(collection, props.track.value)
             }
@@ -197,22 +213,6 @@ const addTrackToCollection = async (collection, track) => {
         collection.id, track.id
     )
     getCollections()
-}
-
-const addTracksToCollection = async (collection, relatedCollectionId, trackTypeFilter) => {
-    await collectionStore.addTracksToCollection(
-        collection.id,
-        {
-            relatedCollectionId: relatedCollectionId,
-            trackType: trackTypeFilter
-        }
-    )
-}
-
-const removeTracksFromCollection = async (collection, trackTypeFilter) => {
-    await collectionStore.removeTracksFromCollection(
-        collection.id, trackTypeFilter
-    )
 }
 
 const removeTrackFromCollection = async (collection, track) => {
