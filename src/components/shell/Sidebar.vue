@@ -4,6 +4,7 @@ import { useBrowserStore } from '@/stores/browser.js'
 import { useCollectionStore } from '@/stores/collection'
 import { debounce } from 'lodash'
 import { useRouter } from 'vue-router'
+import { useToast } from 'vue-toast-notification'
 
 const router = useRouter()
 const browserStore = useBrowserStore()
@@ -109,6 +110,34 @@ const addCollection = () => {
     }
 } 
 
+// drag n drop 
+const dragEnter = (event, collection) => {
+    event.target.style.backgroundColor = 'rgba(96,93,255,0.3)'
+};
+
+const dragLeave = (event, collection) => {
+    event.target.style.backgroundColor = ''
+};
+
+const drop = (event, collection) => {
+    event.preventDefault();
+    event.target.style.backgroundColor = ''
+    // const data = event.dataTransfer.getData("text/plain");
+    handleDroppedItem(collection);
+};
+
+async function handleDroppedItem (collection) {
+    await collectionStore.addSelectedTracksToCollection(
+        collection.id, browserStore.draggableTracks
+    )
+    if (browserStore.draggableTracks.length > 0) {
+        useToast().success(browserStore.draggableTracks.length + ' tracks added to: ' + collection.name)
+    } else {
+        useToast().success('Track added to: ' + collection.name)
+    }
+}
+
+
 </script>
 
 <template>
@@ -164,7 +193,10 @@ const addCollection = () => {
                     class="flex items-center px-6 py-3 flex hover:bg-gray-100 dark:hover:bg-ngreytransparent cursor-pointer text-gray-600 dark:text-gray-300"
                     :class="{ 'bg-gray-100 dark:bg-ngreytransparent font-medium text-black dark:text-gray-100' : isCollectionSelected(collection) }"
                     @click="gotoCollection(collection)"
-                    @click.stop
+                    @dragover.prevent 
+                    @dragenter="dragEnter($event, collection)"
+                    @dragleave="dragLeave($event, collection)"
+                    @drop="drop($event, collection)"
                 >
                     <div class="mr-1">
                         <font-awesome-icon icon="list" class="mr-3 mt-0.5" />

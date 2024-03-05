@@ -12,6 +12,7 @@ export const useTrackStore = defineStore({
     id: 'track',
     state: () => ({
         tracks: [],
+        num_results: 0,
         cursor: 0,
         hasNext: false,
         track: {},
@@ -145,13 +146,14 @@ export const useTrackStore = defineStore({
                     useToast().error("Cannot find track embedding. Generate an embeding first.")
                 }
 
-                const data = await response.json()
-                this.hasNext = data.has_next
+                const result = await response.json()
+                this.hasNext = result.has_next
+                this.num_results = result.data.num_results
 
                 if (!append) {
-                    this.tracks = data.data
+                    this.tracks = result.data.tracks
                 } else {
-                    this.tracks.push(...data.data)
+                    this.tracks.push(...result.data.tracks)
                 }
             } catch (error) {
                 this.error = error
@@ -183,9 +185,8 @@ export const useTrackStore = defineStore({
                     await router.push('/library')
                 }
 
-                const data = await response.json()
-                const result = data.data
-                this.track = result
+                const result = await response.json()
+                this.track = result.data
             } catch (error) {
                 this.error = error
             } finally {
@@ -282,6 +283,65 @@ export const useTrackStore = defineStore({
             } finally {
                 this.loading = false
             }
-        }
+        },
+        async deleteSelectedTracks(trackIds) {
+            const sessionStore = useSessionStore()
+            this.loading = true
+            try {
+                const searchFilterParams = this.getSearchFilterParams()
+                let tracksUrl = `${BASE_API_URL}/api/v1/tracks/selected`
+                const response = await fetch(tracksUrl, {
+                    method: 'DELETE',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        Authorization: `Bearer ${sessionStore.getToken()}`
+                    },
+                    body: JSON.stringify(trackIds)
+                })
+
+                if (response.status === 401) {
+                    await router.push('/login')
+                }
+
+                const data = await response.json()
+                return data
+            } catch (error) {
+                this.error = error
+            } finally {
+                this.loading = false
+            }
+        },
+        async deleteTracks(options = {}) {
+            const sessionStore = useSessionStore()
+            const {
+                collection_id = null,
+                track_type = null
+            } = options
+            this.loading = true
+            try {
+                const searchFilterParams = this.getSearchFilterParams()
+                let tracksUrl = `${BASE_API_URL}/api/v1/tracks?search_filter=${encodeURIComponent(
+                    JSON.stringify(searchFilterParams)
+                )}&track_type=${track_type}&collection_id=${collection_id}`
+                const response = await fetch(tracksUrl, {
+                    method: 'DELETE',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        Authorization: `Bearer ${sessionStore.getToken()}`
+                    }
+                })
+
+                if (response.status === 401) {
+                    await router.push('/login')
+                }
+
+                const data = await response.json()
+                return data
+            } catch (error) {
+                this.error = error
+            } finally {
+                this.loading = false
+            }
+        },
     }
 })

@@ -2,14 +2,27 @@
 import { ref,    onMounted, computed } from 'vue'
 import { useCollectionStore } from '@/stores/collection'
 import { debounce } from 'lodash'
-import { useBrowserStore } from '../../stores/browser';
+import { useBrowserStore } from '../../stores/browser'
+import { useRouter, useRoute } from 'vue-router'
 
 const collectionStore = useCollectionStore()
 const browserStore = useBrowserStore()
 
+// router
+const router = useRouter()
+const route = useRoute()
+
 const props = defineProps({
     track: {
         type: Object,
+        required: true
+    },
+    selectedTrackIds: {
+        type: Array,
+        required: true
+    },
+    trackTypeFilter: {
+        type: String,
         required: true
     },
     collection: {
@@ -54,8 +67,14 @@ function setTitle() {
         collectionAddTrack.value = true
 
         collectionAddSelector.value = []
-        for (let i=0; i < props.track.value.related_collections.length; i++) {
-            collectionAddSelector.value.push(props.track.value.related_collections[i].target.id)
+        if (props.track.value !== 'bulk' && props.track.value !== 'selection') {
+            for (let i=0; i < props.track.value.related_collections.length; i++) {
+                collectionAddSelector.value.push(props.track.value.related_collections[i].target.id)
+            }
+        } else {
+            if (router.currentRoute.value.name === 'collection') {
+                collectionAddSelector.value.push(route.params.id)
+            }
         }
     }
 }
@@ -127,7 +146,7 @@ function isCollectionSelected(collection) {
     return collectionSelector.value.collectionSelected.some(selected => selected.id === collection.id);
 }
 
-function collectionSelected(collection) {
+async function collectionSelected(collection) {
     // go to collection
     if (!collectionAddTrack.value) {
         let selectedIndex = collectionSelector.value.collectionSelected.findIndex(
@@ -141,17 +160,41 @@ function collectionSelected(collection) {
             emit('modalClosed', {collection: collectionSelector, addTrack: collectionAddTrack})
         }
     }    
-    // add/remove track to collection
+    // add/remove track(s) to collection
     if (collectionAddTrack.value) {
         let selectedIndex = collectionAddSelector.value.findIndex(
             (option) => option === collection.id
         )
         if (selectedIndex === -1) {
             collectionAddSelector.value.push(collection.id)
-            addTrackToCollection(collection, props.track.value)
+            if (props.track.value === 'bulk'){
+                await collectionStore.addTracksToCollection(
+                    collection.id,
+                    {
+                        relatedCollectionId: router.currentRoute.value.name === 'collection' ? route.params.id : '',
+                        trackType: props.trackTypeFilter
+                    }
+                )
+            } else if (props.track.value === 'selection')  {
+                await collectionStore.addSelectedTracksToCollection(
+                    collection.id, props.selectedTrackIds
+                )
+            } else {
+                await addTrackToCollection(collection, props.track.value)
+            }
         } else {
             collectionAddSelector.value.splice(selectedIndex, 1)
-            removeTrackFromCollection(collection, props.track.value)
+            if (props.track.value === 'bulk'){
+                await collectionStore.removeTracksFromCollection(
+                    collection.id, props.trackTypeFilter
+                )
+            } else if (props.track.value === 'selection') {
+                await collectionStore.removeSelectedTracksFromCollection(
+                    collection.id, props.selectedTrackIds
+                )
+            } else {
+                await removeTrackFromCollection(collection, props.track.value)
+            }
         }
     }    
 }
@@ -186,6 +229,7 @@ const handleSearchInput = debounce((event) => {
 const closeModal = async (collection, track) => {
     browserStore.collectionModalAdd = false
     browserStore.collectionModalEdit = false
+    // collectionSelector.value.collectionSelected = [props.collection]
     emit('modalClosed', {collection: collectionSelector, addTrack: collectionAddTrack, track: props.track})
 }
 

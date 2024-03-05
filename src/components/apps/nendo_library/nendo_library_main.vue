@@ -51,6 +51,7 @@ const exporterShow = ref(false)
 const filters = ref(false)
 const filtersettings = ref([])
 const searchResultTableRowsConfigModal = ref(false)
+const bulkContextMenu = ref(false)
 const searchResultDisplayType = ref('list')
 const lastVisitedId = ref('')
 const trackTypeSettings = ref({
@@ -109,6 +110,8 @@ onBeforeUnmount(() => {
 watch(
     () => route.fullPath,
     (to, from) => {
+        selectedTracks.value = []
+        browserStore.draggableTracks = []
         resetSearchInput()
     }
 )
@@ -200,7 +203,7 @@ const collectionModalClose = async (data) => {
     } else {
         router.push({ path: '/library/' })
     }
-    if(data.addTrack.value) {
+    if(data.addTrack.value && data.track.value !== 'bulk' && data.track.value !== 'selection') {
         await trackStore.fetchTrack(data.track.value.id)
         // update track on collection assign
         if (router.currentRoute.value.name === 'library' || router.currentRoute.value.name === 'collection') { 
@@ -209,6 +212,11 @@ const collectionModalClose = async (data) => {
             )
             trackStore.tracks[trackIndex] = JSON.parse(JSON.stringify(trackStore.track))
         }
+    }
+    if (router.currentRoute.value.name === 'collection'){
+        await collectionStore.fetchCollection(route.params.id)
+        collectionSelector.value.collectionSelected = [collectionStore.collection]
+        await getTracks()
     }
 }
 
@@ -238,11 +246,9 @@ const trackCreationModalClose = async (response) => {
     }
 }
 
-// Row Display
-const trackDetailsToggle = (track)  => {
-    track.isOpen = !track.isOpen
-}
 
+
+// Row Display
 const showTrackTitleWithFallback = (track, index) => {
     if (track.meta && track.meta.title){ 
         return track.meta.title
@@ -256,9 +262,32 @@ const showTrackTitleWithFallback = (track, index) => {
     return `Track ${index}`
 }
 
-const toggleRow = (index) => {
-    trackStore.tracks[index].isOpen = !trackStore.tracks[index].isOpen;
+// const trackDetailsToggle = (track)  => {
+//     track.isOpen = !track.isOpen
+// }
+
+// Track selection
+const trackDetailsToggle = (track, event) => {
+    event.stopPropagation()
+
+    if (event.shiftKey) {
+        const index = selectedTracks.value.findIndex(tid => tid === track.id);
+        if (index === -1) {
+            selectedTracks.value.push(track.id);
+        } else {
+            selectedTracks.value.splice(index, 1);
+        }
+    } else {
+        selectedTracks.value = []
+        track.isOpen = !track.isOpen
+        // trackStore.tracks[index].isOpen = !trackStore.tracks[index].isOpen;
+    }
 }
+
+const isTrackSelected = computed(() => {
+    return (trackId) => selectedTracks.value.includes(trackId);
+})
+
 
 // Audio Playback
 function track_play(track) {
@@ -428,27 +457,6 @@ const handleKeyPress = (event) => {
     }
 }
 
-// Track selection
-const trackSelectToggle = (track, index, event) => {
-    event.stopPropagation()
-
-    if (event.shiftKey) {
-        const index = selectedTracks.value.findIndex(t => t.id === track.id);
-        if (index === -1) {
-            selectedTracks.value.push(track);
-        } else {
-            selectedTracks.value.splice(index, 1);
-        }
-    } else {
-        selectedTracks.value = []
-        toggleRow(index)
-    }
-}
-
-const isTrackSelected = computed(() => {
-    return (track) => selectedTracks.value.includes(track);
-})
-
 // Search
 const handleSearchInput = debounce((event) => {
     searchText.value = event.target.value
@@ -483,6 +491,10 @@ const deleteTrack = async (track) => {
             )
             if (deletedTrackId !== -1) {
                 trackStore.tracks.splice(deletedTrackId, 1);
+                if (router.currentRoute.value.name === 'collection'){
+                    await collectionStore.fetchCollection(route.params.id)
+                    collectionSelector.value.collectionSelected = [collectionStore.collection]
+                }
             } else {
                 await getTracks()
             }
@@ -498,6 +510,40 @@ const editTrack = async (track) => {
 const newTrack = async (track) => {
     trackCreationTrack.value = {}
     trackCreationModal.value = true
+}
+
+// Bulk processing
+const bulkDelete = async () => {
+    let text = `Delete all Tracks${router.currentRoute.value.name === 'collection' ? ' in this collection' : ''}?`
+    if (confirm(text) == true) {
+        bulkContextMenu.value = false
+        await trackStore.deleteTracks({
+            collection_id: router.currentRoute.value.name === 'collection' ? route.params.id : "",
+            track_type: trackTypeSettings.value.value
+        })
+        if (router.currentRoute.value.name === 'collection'){
+            await collectionStore.fetchCollection(route.params.id)
+            collectionSelector.value.collectionSelected = [collectionStore.collection]
+        }
+        getTracks()
+        selectedTracks.value = []
+        browserStore.draggableTracks = []
+    }
+}
+
+const selectionDelete = async () => {
+    let text = `Delete all selected Tracks${router.currentRoute.value.name === 'collection' ? ' in this collection' : ''}?`
+    if (confirm(text) == true) {
+        bulkContextMenu.value = false
+        await trackStore.deleteSelectedTracks(selectedTracks.value)
+        if (router.currentRoute.value.name === 'collection'){
+            await collectionStore.fetchCollection(route.params.id)
+            collectionSelector.value.collectionSelected = [collectionStore.collection]
+        }
+        getTracks()
+        selectedTracks.value = []
+        browserStore.draggableTracks = []
+    }
 }
 
 // Paginate Infinite scroll
@@ -566,6 +612,7 @@ async function getTracks() {
             reset_paging: true,
             track_type: trackTypeSettings.value.value
         })
+        lastVisitedId.value = ''
     }
     if (router.currentRoute.value.name === 'collection') {
         if (lastVisitedId.value !== route.params.id) {
@@ -649,6 +696,15 @@ async function getTracks() {
         trackStore.track.plugin_data = metafake
     }
 }
+
+function onDragStart($event, track) {
+    if (selectedTracks.value.length === 0) {
+        browserStore.draggableTracks = [track.id]
+    } else {
+        browserStore.draggableTracks = selectedTracks.value
+    }
+}
+
 </script>
 
 <template>
@@ -720,28 +776,68 @@ async function getTracks() {
         <div v-if="filters" class="border-b dark:border-b dark:border-black">   
             <Filters :filtersettings="filtersettings" @updateFilters="handleUpdateFilter"></Filters>
         </div>
-        <template v-if="router.currentRoute.value.name === 'collection'">
-            <div class="px-4 items-center h-[44px] dark:h-[45px] text-sm bg-gradient-to-b from-gray-100 dark:from-ngreyblackhover border-b dark:border-black flex font-bold">
-                <div v-for="(collection, index) in collectionSelector.collectionSelected" :key="index" class="flex w-full">
-                    <font-awesome-icon @click="gotoLibrary" icon="arrow-left" size="xl" class="ml-3 mr-6 cursor-pointer hover:text-ngreenhover" />
-                    {{ collection.name }} {{ collection.size > 0 ? `(${collection.size} tracks)` : '' }}
-                    <div class="flex gap-2 ml-auto">
-                        <div @click="browserStore.collectionModalEdit = collection; browserStore.collectionModal = true;" @click.stop class="text-sm rounded-md px-2 items-center hover:text-npurple cursor-pointer font-medium">
-                            <font-awesome-icon icon="pen" />
-                            <span class="ml-2 mobilehide">Edit</span>
-                        </div>
-                        <div @click="downloadCollection(collection)" @click.stop class="text-sm rounded-md px-2 items-center hover:text-npurple cursor-pointer font-medium">
-                            <font-awesome-icon icon="download" />
-                            <span class="ml-2 mobilehide">Export</span>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </template>
         <template v-if="router.currentRoute.value.name === 'track' && trackStore.track">
             <div class="p-4 pt-3 text-sm h-[44px] dark:h-[45px] bg-gradient-to-b from-gray-100 dark:from-ngreyblackhover border-b dark:border-black flex font-bold capitalize">
                 <font-awesome-icon @click="gotoLibrary" icon="arrow-left" size="xl" class="ml-3 mr-6 cursor-pointer hover:text-ngreenhover" />
                 {{ trackStore.track.track_type }}
+            </div>
+        </template>
+        <template v-if="router.currentRoute.value.name === 'library' || router.currentRoute.value.name === 'collection'">
+            <div class="px-4 py-1.5 pb-2 text-sm h-[44px] dark:h-[45px] bg-gradient-to-b from-gray-100 dark:from-ngreyblackhover border-b dark:border-black flex font-bold">
+                <div class="flex gap-2 w-full">
+                    <div class="w-full">
+                        <div class="mr-auto py-1.5" v-if="router.currentRoute.value.name === 'library'">
+                            <template v-if="!selectedTracks.length"> 
+                                {{ trackStore.num_results }} Results
+                            </template>
+                            <template v-else>
+                                {{ selectedTracks.length }} selected
+                            </template>
+                        </div>
+                        <template v-if="router.currentRoute.value.name === 'collection'">
+                            <div v-for="(collection, index) in collectionSelector.collectionSelected" :key="index" class="flex w-full">
+                                <div class="py-1">
+                                    <font-awesome-icon @click="gotoLibrary" icon="arrow-left" size="xl" class="ml-3 mr-6 cursor-pointer hover:text-ngreenhover" />
+                                    {{ collection.name }} {{ collection.size > 0 ? `(${collection.size} tracks)` : '' }}
+                                </div>
+                                <div class="flex gap-2 ml-auto">
+                                    <button @click="browserStore.collectionModalEdit = collection; browserStore.collectionModal = true;" @click.stop class="whitespace-nowrap text-xs font-medium border dark:border-gray-700 hover:border-npurple rounded-md cursor-pointer px-3 py-1 text-gray-700 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-100">
+                                        <font-awesome-icon icon="pen" />
+                                        <span class="ml-2 mobilehide">Edit</span>
+                                    </button>
+                                    <button @click="downloadCollection(collection)" class="whitespace-nowrap text-xs font-medium border dark:border-gray-700 hover:border-npurple rounded-md cursor-pointer px-3 py-1 text-gray-700 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-100" @click.stop>
+                                        <font-awesome-icon icon="download" />
+                                        <span class="ml-2 mobilehide">Export</span>
+                                    </button>
+                                </div>
+                            </div>
+                        </template>
+                    </div>
+                    <template v-if="selectedTracks.length === 0"> 
+                        <button @click="bulkContextMenu = !bulkContextMenu" class="whitespace-nowrap text-xs font-medium border dark:border-gray-700 hover:border-npurple rounded-md cursor-pointer px-3 py-1 text-gray-700 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-100" @click.stop>
+                            <font-awesome-icon icon="pen" class="mr-1" />
+                            Edit all
+                        </button>
+                        <div v-show="bulkContextMenu" @click="bulkContextMenu = false" @click.stop class="group-hover:visible origin-top-right absolute right-4 mt-8 w-56 p-1 rounded-md shadow-lg bg-gray-100 dark:bg-[#282828] ring-1 ring-black ring-opacity-5 focus:outline-none z-50 font-normal">
+                            <div class="flex p-3 hover:bg-gray-200 dark:hover:bg-[#3e3e3e] rounded cursor-pointer" @click="bulkDelete()"><div class="w-6"><font-awesome-icon icon="x" class="mt-0.5" /></div>Delete All</div>
+                            <div class="flex p-3 hover:bg-gray-200 dark:hover:bg-[#3e3e3e] rounded cursor-pointer" @click="collectionTrack.value = 'bulk'; browserStore.collectionModal = true; bulkContextMenu = false"><div class="w-6"><font-awesome-icon icon="bars" class="mt-0.5" /></div>Add all to collection</div>
+                        </div>
+                    </template>
+                    <template v-else> 
+                        <button @click="bulkContextMenu = !bulkContextMenu" class="whitespace-nowrap text-xs font-medium border dark:border-gray-700 hover:border-npurple rounded-md cursor-pointer px-3 py-1 text-gray-700 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-100" @click.stop>
+                            <font-awesome-icon icon="pen" class="mr-1" />
+                            Edit selected
+                        </button>
+                        <div v-show="bulkContextMenu" @click="bulkContextMenu = false" @click.stop class="group-hover:visible origin-top-right absolute right-4 mt-8 w-56 p-1 rounded-md shadow-lg bg-gray-100 dark:bg-[#282828] ring-1 ring-black ring-opacity-5 focus:outline-none z-50 font-normal">
+                            <div class="flex p-3 hover:bg-gray-200 dark:hover:bg-[#3e3e3e] rounded cursor-pointer" @click="selectionDelete()"><div class="w-6"><font-awesome-icon icon="x" class="mt-0.5" /></div>Delete selection</div>
+                            <div class="flex p-3 hover:bg-gray-200 dark:hover:bg-[#3e3e3e] rounded cursor-pointer" @click="collectionTrack.value = 'selection'; browserStore.collectionModal = true; bulkContextMenu = false"><div class="w-6"><font-awesome-icon icon="bars" class="mt-0.5" /></div>Add selected to collection</div>
+                        </div>
+                    </template>
+                    <button @click="searchResultTableRowsConfigModalShow()" class="whitespace-nowrap text-xs font-medium border dark:border-gray-700 hover:border-npurple rounded-md cursor-pointer px-3 py-1 text-gray-700 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-100" @click.stop>
+                        <font-awesome-icon icon="table-columns" class="mr-1" />
+                        Display
+                    </button>
+                </div>
             </div>
         </template>
         <div class="flex-1 overflow-auto" @click="trackStore.track.contextMenu = false" ref="scrollComponent">
@@ -807,7 +903,7 @@ async function getTracks() {
                 </template>
 
                 <div class="p-4 items-center text-sm h-[44px] dark:h-[45px] bg-gradient-to-b from-gray-100 dark:from-ngreyblackhover border-b dark:border-black flex font-bold">
-                    <div>Related</div>
+                    <div>{{ trackStore.num_results }} Related</div>
                 </div>
             </template>
 
@@ -891,17 +987,13 @@ async function getTracks() {
                             <template v-for="(row, rowindex) in searchResultTableRows.optionsSelected" :key="rowindex">
                                 <th class="px-2 py-2 dark:pt-2">{{ row.name }}</th>
                             </template>
-                            <th class="px-3 pl-1 py-1.5 dark:pt-1 text-right cursor-pointer hover:text-npurple whitespace-nowrap" @click="searchResultTableRowsConfigModalShow()">
-                                <div class="border dark:border-gray-700 hover:border-npurple rounded-md inline-block py-1 px-2 text-gray-800 dark:text-gray-200 hover:text-npurple">
-                                    <font-awesome-icon icon="table-columns" />
-                                    <span class="mobilehide ml-1">Display</span>
-                                </div>
+                            <th class="px-3 pl-1 py-1.5 dark:pt-1 text-right cursor-pointer hover:text-npurple whitespace-nowrap">
                             </th>
                         </tr>
                     </thead>
                     <tbody>
                         <template v-for="(track, index) in trackStore.tracks" :key="track.id">
-                            <tr class="group text-sm cursor-pointer hover:bg-gray-100 dark:hover:bg-ngreytransparent" :class="{ 'bg-gray-100 dark:bg-ngreytransparent border-t dark:border-black' : track.isOpen, 'bg-blue-100' : isTrackSelected(track)}" @click="trackDetailsToggle(track)" @mouseenter="contextMenuClose(track)">
+                            <tr class="select-none group text-sm cursor-pointer hover:bg-gray-100 dark:hover:bg-ngreytransparent draggable" draggable="true" @dragstart="onDragStart($event, track)" :class="{ 'bg-gray-100 dark:bg-ngreytransparent border-t dark:border-black' : track.isOpen, 'bg-blue-100 dark:bg-blue-800' : isTrackSelected(track.id)}" @click="trackDetailsToggle(track, $event)" @mouseenter="contextMenuClose(track)">
                                 <td class="w-5 py-2 px-4 text-right min-w-[50px] relative" @click="track_play(track)" @click.stop>
                                     <div
                                         class="h-[40px] w-[40px] rounded bg-cover relative cursor-pointer"
@@ -921,7 +1013,7 @@ async function getTracks() {
                                     </div>
                                 </td>
                                 <td class="pr-2 pl-0">
-                                    <div class="font-medium hover:underline inline-block" @click="gotoTrack(track)" @click.stop :class="{'text-ngreenhover': track.id === currentTrack.id}">
+                                    <div class="font-medium hover:underline inline-block dragclone" @click="gotoTrack(track)" @click.stop :class="{'text-ngreenhover': track.id === currentTrack.id}">
                                         {{ showTrackTitleWithFallback(track, index) }}
                                     </div>
                                     <div>
@@ -1065,7 +1157,7 @@ async function getTracks() {
         </modal>
     </div>
     <modal :open="browserStore.collectionModal" @update:open="collectionModalCloseCall()" title="">   
-        <Collection :track="collectionTrack" :collection="collectionStore.collection" @modalClosed="collectionModalClose" ref="collectionModalRef"></Collection>
+        <Collection :track="collectionTrack" :selected-track-ids="selectedTracks" :track-type-filter="trackTypeSettings.value" :collection="collectionStore.collection" @modalClosed="collectionModalClose" ref="collectionModalRef"></Collection>
     </modal>
     <Tools :modalopen="browserStore.toolViewActive" @click="browserStore.toolViewActive = !browserStore.toolViewActive" @modalClosed="browserStore.toolViewActive = false"></Tools>
     <TrackCreation :track="trackCreationTrack" :modalopen="trackCreationModal" @click="trackCreationModal = !trackCreationModal" @modalClosed="trackCreationModalClose"></TrackCreation>
@@ -1104,5 +1196,8 @@ input[type="search"]::-webkit-search-decoration,
 input[type="search"]::-webkit-search-cancel-button,
 input[type="search"]::-webkit-search-results-button,
 input[type="search"]::-webkit-search-results-decoration { display: none; }
-
+.draggable {
+    cursor: grab;
+    touch-action: none; /* This line is important to make it work on touch devices */
+}
 </style>
