@@ -92,14 +92,9 @@ const handleFileUploadSuccess = (newFile) => {
 const handleFileUploadError = (newFile) => {
     fileUploadActive.value = false
     uploadFailed.value = true
-    setTimeout(function(){
-        uploadFailed.value = false
-        emit('modalClosed')
-    }, 3000)
     if (newFile.error){
         useToast().error(newFile.response.detail)
     }
-    router.push({ path: '/library/'})
 }
 
 const handleFileUploadStart = () => {
@@ -177,16 +172,10 @@ const saveTrack = async () => {
     emit('modalClosed')
 }
 
-const newTrack = async () => {
-    trackStore.trackTemp = track
-    trackStore.saveTrack(true) 
-    emit('modalClosed')
-}
 
 const closeModal = async () => {
-    if(!fileUploadActive.value) {
-        emit('modalClosed')
-    }
+    fileUploadActive.value = false;
+    emit('modalClosed')
 }
 
 const autoResize = (event) => {
@@ -222,8 +211,8 @@ const afterLeave = (el) => {
 
 <template>
     <modal :open="isOpen" @update:open="closeModal" title="">
-        <div class="flex gap-4 items-center mb-2">
-            <div class="font-bold text-xl">
+        <div class="flex gap-4 items-center mb-2 border-b dark:border-gray-800 pb-3">
+            <div class="text-xl font-bold">
                 <template v-if="!fileUploadActive">
                     {{ modalName }}
                 </template>
@@ -252,7 +241,7 @@ const afterLeave = (el) => {
             <div v-if="trackEdit">
                 <!--------------------------------------------- Track --------------------------------------------------- -->
                 <template v-if="track">
-                    <div class="grid grid-cols-1 gap-2 mb-2 border-t border-gray-700 pt-4">
+                    <div class="grid grid-cols-1 gap-2 mb-2 pt-4">
                         <div>
                             <div class="font-medium mb-1">Title</div>
                             <textarea v-model="metaTitleTemp" @input="autoResize" class="border p-2 rounded w-full resize-none overflow-hidden dark:border-gray-700 custom-textarea" rows="1"></textarea>
@@ -291,19 +280,15 @@ const afterLeave = (el) => {
                         Upload Complete
                     </div>
                 </template>
-                <template v-else-if="uploadFailed">
-                    <font-awesome-icon icon="triangle-exclamation" class="h-[40px] float-left mr-4" />
-                    Upload Failed
-                </template>
                 <template v-else>
                     <template v-if="track.track_type === 'track'">
                         <div class="pt-2">
-                            <Import accept="audio/mpeg,audio/wav,audio/flac,application/zip,application/tar,application/gzip" extension="mp3,wav,aiff,flac,zip,tar,gz" @file-upload-start="handleFileUploadStart" @file-upload-success="handleFileUploadSuccess" @file-upload-error="handleFileUploadError" @file-upload-cancel="closeModal"></Import>
+                            <Import accept="audio/*,application/zip,application/tar,application/gzip" extension="mp3,wav,aiff,flac,zip,tar,gz" @file-upload-start="handleFileUploadStart" @file-upload-success="handleFileUploadSuccess" @file-upload-error="handleFileUploadError" @file-upload-cancel="closeModal"></Import>
                         </div>
                     </template>
                     <template v-if="track.track_type === 'image'">
                         <div class="pt-2">
-                            <Import accept="image/png,image/gif,image/jpeg,image/webp" extension="gif,jpg,jpeg,png,webp" @file-upload-start="handleFileUploadStart"  @file-upload-success="handleFileUploadSuccess" @file-upload-error="handleFileUploadError" @file-upload-cancel="closeModal"></Import>
+                            <Import accept="image/*" extension="gif,jpg,jpeg,png,webp" @file-upload-start="handleFileUploadStart"  @file-upload-success="handleFileUploadSuccess" @file-upload-error="handleFileUploadError" @file-upload-cancel="closeModal"></Import>
                         </div>
                     </template>
                     <template v-if="track.track_type === 'text'">

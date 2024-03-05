@@ -1,4 +1,46 @@
 /* ./src/index.css */
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+/* custom uppy dashboard styling overrides */
+[data-uppy-theme="dark"] .uppy-Dashboard-inner {
+    border-color: rgb(31, 41, 55) !important;
+}
+
+.uppy-Dashboard-AddFiles {
+    border: none !important;
+}
+
+.uppy-DashboardContent-addMore {
+    color: #5C59F6 !important;
+}
+
+.uppy-Dashboard-Item-previewInnerWrap {
+    background-color: #5C59F6 !important;
+}
+
+.uppy-Dashboard-Item-previewIcon {
+    color: #5C59F6 !important;
+
+    path {
+        fill: #5C59F6 !important;
+    }
+}
+
+.uppy-StatusBar-progress {
+    background-color: #5C59F6 !important;
+}
+
+.uppy-StatusBar-spinner path {
+    fill: #5C59F6 !important;
+}
+
+.uppy-Dashboard-browse {
+    color: #5C59F6 !important;
+}
+
+.uppy-Dashboard-browse:hover {
+    border-bottom-color: #5C59F6 !important;
+}
