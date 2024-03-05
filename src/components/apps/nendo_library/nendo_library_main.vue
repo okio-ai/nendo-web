@@ -110,6 +110,8 @@ onBeforeUnmount(() => {
 watch(
     () => route.fullPath,
     (to, from) => {
+        selectedTracks.value = []
+        browserStore.draggableTracks = []
         resetSearchInput()
     }
 )
@@ -524,6 +526,8 @@ const bulkDelete = async () => {
             collectionSelector.value.collectionSelected = [collectionStore.collection]
         }
         getTracks()
+        selectedTracks.value = []
+        browserStore.draggableTracks = []
     }
 }
 
@@ -537,6 +541,8 @@ const selectionDelete = async () => {
             collectionSelector.value.collectionSelected = [collectionStore.collection]
         }
         getTracks()
+        selectedTracks.value = []
+        browserStore.draggableTracks = []
     }
 }
 
@@ -812,7 +818,7 @@ function onDragStart($event, track) {
                             <font-awesome-icon icon="pen" class="mr-1" />
                             Edit all
                         </button>
-                        <div v-show="bulkContextMenu" @click="bulkContextMenu = false" @click.stop class="group-hover:visible origin-top-right absolute right-4 mt-8 w-56 p-1 rounded-md shadow-lg bg-gray-100 dark:bg-[#282828] ring-1 ring-black ring-opacity-5 focus:outline-none z-50">
+                        <div v-show="bulkContextMenu" @click="bulkContextMenu = false" @click.stop class="group-hover:visible origin-top-right absolute right-4 mt-8 w-56 p-1 rounded-md shadow-lg bg-gray-100 dark:bg-[#282828] ring-1 ring-black ring-opacity-5 focus:outline-none z-50 font-normal">
                             <div class="flex p-3 hover:bg-gray-200 dark:hover:bg-[#3e3e3e] rounded cursor-pointer" @click="bulkDelete()"><div class="w-6"><font-awesome-icon icon="x" class="mt-0.5" /></div>Delete All</div>
                             <div class="flex p-3 hover:bg-gray-200 dark:hover:bg-[#3e3e3e] rounded cursor-pointer" @click="collectionTrack.value = 'bulk'; browserStore.collectionModal = true; bulkContextMenu = false"><div class="w-6"><font-awesome-icon icon="bars" class="mt-0.5" /></div>Add all to collection</div>
                         </div>
@@ -822,7 +828,7 @@ function onDragStart($event, track) {
                             <font-awesome-icon icon="pen" class="mr-1" />
                             Edit selected
                         </button>
-                        <div v-show="bulkContextMenu" @click="bulkContextMenu = false" @click.stop class="group-hover:visible origin-top-right absolute right-4 mt-8 w-56 p-1 rounded-md shadow-lg bg-gray-100 dark:bg-[#282828] ring-1 ring-black ring-opacity-5 focus:outline-none z-50">
+                        <div v-show="bulkContextMenu" @click="bulkContextMenu = false" @click.stop class="group-hover:visible origin-top-right absolute right-4 mt-8 w-56 p-1 rounded-md shadow-lg bg-gray-100 dark:bg-[#282828] ring-1 ring-black ring-opacity-5 focus:outline-none z-50 font-normal">
                             <div class="flex p-3 hover:bg-gray-200 dark:hover:bg-[#3e3e3e] rounded cursor-pointer" @click="selectionDelete()"><div class="w-6"><font-awesome-icon icon="x" class="mt-0.5" /></div>Delete selection</div>
                             <div class="flex p-3 hover:bg-gray-200 dark:hover:bg-[#3e3e3e] rounded cursor-pointer" @click="collectionTrack.value = 'selection'; browserStore.collectionModal = true; bulkContextMenu = false"><div class="w-6"><font-awesome-icon icon="bars" class="mt-0.5" /></div>Add selected to collection</div>
                         </div>
