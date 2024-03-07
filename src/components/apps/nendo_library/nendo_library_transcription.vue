@@ -13,6 +13,11 @@ const props = defineProps({
     highlight: {
         type: Boolean,
         required: true
+    },
+    paragraphAfter: {
+        type: Number,
+        required: false,
+        default: 3
     }
 })
 
@@ -40,7 +45,7 @@ onMounted(() => {
     // join up 5 entries into one
     entireText.value = entries.value.map(entry => entry.text).reduce(
             (acc, text, index) => {
-                if (index % 3 === 0) {
+                if (index % props.paragraphAfter === 0) {
                     acc.push('')
                 }
                 acc[acc.length - 1] += text + ' '
@@ -85,7 +90,7 @@ const highlightClass = (index) => {
         <template v-if="props.highlight">
             <span v-for="(entry, index) in entries" :key="index" :class="highlightClass(index)" class="text-white text-opacity-50">
                 {{ entry.text }}
-                <template v-if="(index !== 0) && (index % 3 === 0)">
+                <template v-if="(index !== 0) && (index % props.paragraphAfter === 0)">
                     <p class="mb-5"></p>
                 </template>
             </span>
