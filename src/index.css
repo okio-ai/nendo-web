@@ -1,5 +1,4 @@
 /* ./src/index.css */
-
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -23,10 +22,10 @@
 
 .uppy-Dashboard-Item-previewIcon {
     color: #5C59F6 !important;
+}
 
-    path {
-        fill: #5C59F6 !important;
-    }
+.uppy-Dashboard-Item-previewIcon path {
+    fill: #5C59F6 !important;
 }
 
 .uppy-StatusBar-progress {
