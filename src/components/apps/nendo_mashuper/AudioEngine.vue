@@ -317,13 +317,25 @@ export async function audioPlayer() {
     }
   }
 
-  function toggleMute(index) {
+  function mute(index) {
     const state = trackStates[index]
     // if muting, save original volume
     if (state.mute === false){
       state.originalVolume = state.gainNode.gain.value
     }
-    state.mute = !state.mute
+    state.mute = true
+    if (state.playing) {
+      applyState(index, true)
+    }
+  }
+
+  function unMute(index) {
+    const state = trackStates[index]
+    state.mute = false
+    // if unmuting, restore original volume
+    if (state.mute === true){
+      state.gainNode.gain.value = state.originalVolume
+    }    
     if (state.playing) {
       applyState(index, true)
     }
@@ -343,7 +355,7 @@ export async function audioPlayer() {
       if (isAloneUnmuted === true){
         trackStates.forEach((trackState, i) => {
           if (i !== index) {
-            toggleMute(i)
+            unMute(i)
           }
         })
         return
@@ -352,11 +364,11 @@ export async function audioPlayer() {
     // mute all other tracks and unmute self => solo
     trackStates.forEach((trackState, i) => {
       if (i !== index && trackState.mute === false) {
-        toggleMute(i)
+        mute(i)
       }
     })
     if (state.mute === true){
-      toggleMute(index)
+      unMute(index)
     }
   }
 
@@ -563,7 +575,8 @@ export async function audioPlayer() {
     removeTrack,
     removeAllTracks,
     toggleTrack,
-    toggleMute,
+    mute,
+    unMute,
     toggleSolo,
     toggleAllTracks,
     startAll,
