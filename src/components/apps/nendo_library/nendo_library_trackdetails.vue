@@ -32,7 +32,7 @@
                 </div>
             </template>
             <template v-else>
-                <div class="pl-4 pt-3 pb-5 px-4">
+                <div class="pl-4 pt-3 pb-5 px-4 overflow-y-scroll ">
                     <template v-if="info.key === 'transcription'">
                         <TrackTranscription :plugindata="getPluginData(track.plugin_data)[0].value" :playbacktime="currentTrackPlaybackTime" :highlight="track.id === currentTrack.id"></TrackTranscription>
                     </template>
