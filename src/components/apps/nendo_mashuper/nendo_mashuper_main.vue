@@ -247,7 +247,7 @@ async function mute(index) {
   }
 }
 
-async function unmute(index) {
+async function unMute(index) {
   await audioPlayerAPI.unMute(index)
   const track = lib.channels[index]
   if (track.settings.mute) {
@@ -333,7 +333,6 @@ async function getTrack(track) {
         }
       }
     )
-    console.log(response)
     if (response.status !== 200) {
       throw new Error(response.statusText)
     }
@@ -500,9 +499,6 @@ async function generateTrack(channelId) {
       lib.channels[index].track.url = rndfile.fileName
 
       await audioPlayerAPI.replaceTrack(index, rndfile.fileName)
-
-      index = lib.channels.findIndex((channel) => channel.id === channelId)
-
       await audioPlayerAPI.setVolume(index, lib.channels[index].settings.volume)
       if (lib.channels[index].settings.mute) {
         await mute(index)
@@ -1212,7 +1208,7 @@ const handleCollectionSelect = (collectionId, collectionName) => {
                 'opacity-40':
                   track.settings.mute
               }"
-              @click="unmute(index)"
+              @click="unMute(index)"
             >
               <div
                 class="relative bg-cover bg-center min-w-[85px] rounded-md cursor-pointer bg-gray-800 transition"
@@ -1322,7 +1318,7 @@ const handleCollectionSelect = (collectionId, collectionName) => {
               <div
                 class="rounded-md min-w-[85px] text-center align-middle relative cursor-pointer transition"
                 :style="{ backgroundColor: track.color }"
-                @click="generateTrack(track.id)"
+                @click.stop="generateTrack(track.id)"
                 v-if="!track.loading"
               >
                 <font-awesome-icon

@@ -325,7 +325,7 @@ export async function audioPlayer() {
     }
     state.mute = true
     if (state.playing) {
-      applyState(index, true)
+      applyState(index, false)
     }
   }
 
@@ -405,7 +405,7 @@ export async function audioPlayer() {
         state.startAllTime = startAllTime // Store the startAllTime in state
         state.playing = true
       }
-      applyState(index, false)
+      applyState(index, true)
     })
 
     updateCurrentTime()
