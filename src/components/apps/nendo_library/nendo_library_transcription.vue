@@ -79,7 +79,7 @@ const highlightClass = (index) => {
         }
         return 'highlight text-opacity-100'
     }
-    return ''
+    return 'text-opacity-50'
 }
 
 </script>
@@ -88,7 +88,7 @@ const highlightClass = (index) => {
 <template>
     <div class="break-word w-[80%] h-96 text-m">
         <template v-if="props.highlight">
-            <span v-for="(entry, index) in entries" :key="index" :class="highlightClass(index)" class="text-white text-opacity-50">
+            <span v-for="(entry, index) in entries" :key="index" :class="highlightClass(index)" class="text-white">
                 {{ entry.text }}
                 <template v-if="(index !== 0) && (index % props.paragraphAfter === 0)">
                     <p class="mb-5"></p>

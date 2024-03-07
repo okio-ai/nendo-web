@@ -38,7 +38,7 @@
                             :plugindata="getPluginData(track.plugin_data)[0].value"
                             :playbacktime="currentTrackPlaybackTime"
                             :highlight="track.id === currentTrack.id"
-                            :paragraph-after="30"
+                            :paragraph-after="150"
                         />
                     </template>
                     <template v-else-if="info.key === 'caption'">
