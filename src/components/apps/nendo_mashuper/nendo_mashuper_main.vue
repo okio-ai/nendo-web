@@ -239,15 +239,17 @@ function shortenedText(text, maxlength) {
   return text
 }
 
-function mute(track, index) {
-  audioPlayerAPI.toggleMute(index)
+async function mute(index) {
+  await audioPlayerAPI.mute(index)
+  const track = lib.channels[index]
   if (!track.settings.mute) {
     track.settings.mute = true
   }
 }
 
-function unmute(track, index) {
-  audioPlayerAPI.toggleMute(index)
+async function unmute(index) {
+  await audioPlayerAPI.unMute(index)
+  const track = lib.channels[index]
   if (track.settings.mute) {
     track.settings.mute = false
   }
@@ -503,7 +505,7 @@ async function generateTrack(channelId) {
 
       await audioPlayerAPI.setVolume(index, lib.channels[index].settings.volume)
       if (lib.channels[index].settings.mute) {
-        await audioPlayerAPI.toggleMute(index)
+        await mute(index)
       }
       if (lib.channels[index].settings.solo) {
         await audioPlayerAPI.toggleSolo(index)
@@ -574,10 +576,10 @@ async function loadScene(index, playback = true) {
       lib.channels[index].loading = true
       await audioPlayerAPI.replaceTrack(index, url)
       await audioPlayerAPI.setVolume(index, scene.channels[index].settings.volume)
-      if (scene.channels[index].settings.mute) {
-        await audioPlayerAPI.toggleMute(index)
+      if (lib.channels[index].settings.mute) {
+        await mute(index)
       }
-      if (scene.channels[index].settings.solo) {
+      if (lib.channels[index].settings.solo) {
         await audioPlayerAPI.toggleSolo(index)
       }
     } else {
@@ -590,10 +592,10 @@ async function loadScene(index, playback = true) {
       await audioPlayerAPI.replaceTrack(index, url)
 
       await audioPlayerAPI.setVolume(index, scene.channels[index].settings.volume)
-      if (scene.channels[index].settings.mute) {
-        await audioPlayerAPI.toggleMute(index)
+      if (lib.channels[index].settings.mute) {
+        await mute(index)
       }
-      if (scene.channels[index].settings.solo) {
+      if (lib.channels[index].settings.solo) {
         await audioPlayerAPI.toggleSolo(index)
       }
     }
@@ -1210,7 +1212,7 @@ const handleCollectionSelect = (collectionId, collectionName) => {
                 'opacity-40':
                   track.settings.mute
               }"
-              @click="unmute(track, index)"
+              @click="unmute(index)"
             >
               <div
                 class="relative bg-cover bg-center min-w-[85px] rounded-md cursor-pointer bg-gray-800 transition"
@@ -1291,7 +1293,7 @@ const handleCollectionSelect = (collectionId, collectionName) => {
                     </div>
                     <div
                       class="border-l border-ngreyoverlay w-[85px] text-center hover:bg-ngreyoverlay pt-8 font-bold"
-                      @click.stop="mute(track, index)"
+                      @click.stop="mute(index)"
                     >
                       M
                     </div>
