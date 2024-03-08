@@ -104,17 +104,6 @@ const highlightClass = (index) => {
 </template>
 
 <style scoped>
-/* For Webkit-based browsers (Chrome, Safari and Opera) */
-.scrollbar-hide::-webkit-scrollbar {
-    display: none;
-}
-
-/* For IE, Edge and Firefox */
-.scrollbar-hide {
-    -ms-overflow-style: none;  /* IE and Edge */
-    scrollbar-width: none;  /* Firefox */
-}
-
 .highlight {
     background-color: rgb(212, 232, 255);
     border-radius: 5px;
