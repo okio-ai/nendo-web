@@ -145,7 +145,8 @@ uppy.on('file-added', (file) => {
                     <div class="mb-2 text-md">
                         Run tool on files
                     </div>
-                    <select v-model="state.selectedGeneratorId"
+                    <select 
+                            v-model="state.selectedGeneratorId"
                             :class="{ 'text-gray-400': !state.selectedGeneratorId, 'text-gray-800 dark:text-gray-300': state.selectedGeneratorId }"
                             class="block w-full p-2 border border-gray-600 dark:border-gray-700 rounded-md bg-transparent">
                         <option value="" disabled hidden>Select tool</option>

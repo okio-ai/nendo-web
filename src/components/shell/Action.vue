@@ -88,7 +88,7 @@
                         <tr v-if="action.showDetails">
                             <td :colspan="5" class="text-gray-500 p-4">
                                 <p><span class="font-bold">Action ID</span>: {{ action.id }}</p>
-                                <p v-if="action.meta.target"><span class="font-bold">Action Target</span>: <span class="text-blue-500 hover:text-blue-700 cursor-pointer" @click="gotoLibrary(action.meta.target.target_type, action.meta.target.target_id)">{{ action.meta.target.target_id }}</span></p>
+                                <p v-if="action.meta.target"><span class="font-bold">Action Target</span>: <span class="text-blue-500 hover:text-blue-700 cursor-pointer" @click="gotoLibrary(action.meta.target.target_type, action.meta.target.target_id)">{{ action.meta.target.target_title }}</span></p>
                                 <span class="font-bold">Action Parameters</span>:
                                     <div v-if="action.meta.parameters">
                                         <div v-for="(value, key) in parseDict(action.meta.parameters)" :key="key">
@@ -100,9 +100,7 @@
                                     </div>
                                 <span class="font-bold">Action Errors</span>:
                                     <div v-if="action.meta.errors">
-                                        <div v-for="error in action.meta.errors" :key="error">
-                                        {{ error }}
-                                        </div>
+                                        <div v-for="error in action.meta.errors" :key="error" v-html="wrapUUIDsWithLinks(error)"></div>
                                     </div>
                                     <div v-if="action.exc_info">
                                     {{ action.exc_info }}
@@ -216,6 +214,16 @@ export default {
                 return {};
             }
         },
+
+        wrapUUIDsWithLinks(text) {
+            // UUIDv4 regular expression pattern
+            const uuidPattern = /\b[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}\b/gi
+            
+            // Replace matching UUIDv4 strings with an <a> tag link
+            return text.replace(uuidPattern, (uuid) => {
+                return `<a href="library/${uuid}" class="text-blue-500 hover:text-blue-700">${uuid}</a>`
+            })
+        }
     }
 }
 </script>
