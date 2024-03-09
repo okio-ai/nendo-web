@@ -322,7 +322,16 @@ export const useTrackStore = defineStore({
                 const searchFilterParams = this.getSearchFilterParams()
                 let tracksUrl = `${BASE_API_URL}/api/v1/tracks?search_filter=${encodeURIComponent(
                     JSON.stringify(searchFilterParams)
-                )}&track_type=${track_type}&collection_id=${collection_id}`
+                )}`
+
+                if (collection_id) {
+                    tracksUrl += `&collection_id=${collection_id}`
+                }
+
+                if (track_type) {
+                    tracksUrl += `&track_type=${track_type}`
+                }
+
                 const response = await fetch(tracksUrl, {
                     method: 'DELETE',
                     headers: {
