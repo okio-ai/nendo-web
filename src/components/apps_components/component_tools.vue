@@ -161,7 +161,7 @@ const generatorData = ref({
                         { id: 'prompt', name: 'Style Prompt', description: 'Default prompt to append to each track', type: 'string', value: '' },
                         { id: 'batch_size', name: 'Batch size', description: '', type: 'numbers', value: '1', value_min: '1', value_max: '500', value_step: '1' },
                         { id: 'epochs', name: 'Epochs', description: '', type: 'numbers', value: '5', value_min: '1', value_max: '256', value_step: '1' },
-                        { id: 'lr', name: 'Learning Rate', description: '', type: 'numbers', value: '0.01', value_min: '0', value_max: '1.0', value_step: '0.0001' },
+                        { id: 'lr', name: 'Learning Rate', description: '', type: 'numbers', value: '0.0001', value_min: '0', value_max: '1.0', value_step: '0.0001' },
                         {
                             id: 'model', name: 'Base model', description: '', type: 'select', value: 'facebook/musicgen-small',
                             value_options: [
@@ -229,10 +229,10 @@ const generatorData = ref({
     ]
 })
 
-onMounted(() => {
+onMounted(async () => {
     toolActive.value = false
     showConfig.value = false
-    modelStore.fetchModelInfo()
+    await modelStore.fetchModelInfo()
     generatorData.value.generator
         .find(g => g.id === "musicgen")
         .plugins[0]
@@ -537,13 +537,13 @@ const getIsActiveSetting = (plugin) => {
                                 </div>
                             </div>
                             <div v-else class="mb-2"></div>
-                            <transition 
-                                name="expand" 
-                                @before-enter="beforeEnter" 
-                                @enter="enter" 
-                                @after-enter="afterEnter" 
-                                @before-leave="beforeLeave" 
-                                @leave="leave" 
+                            <transition
+                                name="expand"
+                                @before-enter="beforeEnter"
+                                @enter="enter"
+                                @after-enter="afterEnter"
+                                @before-leave="beforeLeave"
+                                @leave="leave"
                                 @after-leave="afterLeave"
                             >
                                 <div v-if="plugin.showSettings" class="py-2">
@@ -609,13 +609,13 @@ const getIsActiveSetting = (plugin) => {
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
                             </svg>
                         </div>
-                        <transition 
-                            name="expand" 
-                            @before-enter="beforeEnter" 
-                            @enter="enter" 
-                            @after-enter="afterEnter" 
-                            @before-leave="beforeLeave" 
-                            @leave="leave" 
+                        <transition
+                            name="expand"
+                            @before-enter="beforeEnter"
+                            @enter="enter"
+                            @after-enter="afterEnter"
+                            @before-leave="beforeLeave"
+                            @leave="leave"
                             @after-leave="afterLeave"
                         >
                             <div v-if="showConfig">
