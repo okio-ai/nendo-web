@@ -35,7 +35,7 @@
                 <div class="pl-4 pt-3 pb-5 px-4 overflow-y-scroll ">
                     <template v-if="info.key === 'transcription'">
                         <TrackTranscription
-                            :plugindata="getPluginData(track.plugin_data)[0].value"
+                            :plugindata="getPluginData(track.plugin_data, 'nendo_plugin_transcribe_whisper', 'transcription')[0].value"
                             :playbacktime="currentTrackPlaybackTime"
                             :highlight="track.id === currentTrack.id"
                             :paragraph-after="150"
