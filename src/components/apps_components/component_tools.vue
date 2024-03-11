@@ -149,7 +149,7 @@ const generatorData = ref({
             name: 'MusicGen Training',
             description: '',
             image: '',
-            showInput: false,
+            showInput: true,
             showReplaceSelector: true,
             showAddToCollectionPicker: false,
             plugins: [
