@@ -90,9 +90,9 @@ const highlightClass = (index) => {
         <template v-if="props.highlight">
             <span v-for="(entry, index) in entries" :key="index" :class="highlightClass(index)" class="text-white">
                 {{ entry.text }}
-                <template v-if="(index !== 0) && (index % props.paragraphAfter === 0)">
-                    <p class="mb-5"></p>
-                </template>
+<!--                <template v-if="(index !== 0) && (index % props.paragraphAfter === 0)">-->
+<!--                    <p class="mb-5"></p>-->
+<!--                </template>-->
             </span>
         </template>
         <template v-else>
@@ -111,9 +111,9 @@ const highlightClass = (index) => {
 }
 
 .highlightdark {
-    //background-color: rgb(26, 83, 147);
+    background-color: rgb(26, 83, 147);
     border-radius: 5px;
     font-weight: bold;
-    padding: 3px;
+    padding: 1px;
 }
 </style>
