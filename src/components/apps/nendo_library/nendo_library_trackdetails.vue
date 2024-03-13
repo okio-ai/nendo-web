@@ -32,12 +32,22 @@
                 </div>
             </template>
             <template v-else>
-                <div class="pl-4 pt-3 pb-5 px-4">
+                <div class="pl-4 pt-3 pb-5 px-4 overflow-y-scroll ">
                     <template v-if="info.key === 'transcription'">
-                        <TrackTranscription :plugindata="getPluginData(track.plugin_data)[0].value" :playbacktime="currentTrackPlaybackTime" :highlight="track.id === currentTrack.id"></TrackTranscription>
+                        <TrackTranscription
+                            :plugindata="getPluginData(track.plugin_data, 'nendo_plugin_transcribe_whisper', 'transcription')[0].value"
+                            :playbacktime="currentTrackPlaybackTime"
+                            :highlight="track.id === currentTrack.id"
+                            :paragraph-after="150"
+                        />
                     </template>
                     <template v-else-if="info.key === 'caption'">
-                        <TrackTranscription :plugindata="deconstructCaption(getPluginData(track.plugin_data, 'nendo_plugin_caption_lpmusiccaps', 'caption'))" :playbacktime="currentTrackPlaybackTime" :highlight="track.id === currentTrack.id"></TrackTranscription>
+                        <TrackTranscription
+                            :plugindata="deconstructCaption(getPluginData(track.plugin_data, 'nendo_plugin_caption_lpmusiccaps', 'caption'))"
+                            :playbacktime="currentTrackPlaybackTime"
+                            :highlight="track.id === currentTrack.id"
+                            :paragraph-after="3"
+                        />
                     </template>
 
                     <template v-else-if="info.key === 'topic_detection'">

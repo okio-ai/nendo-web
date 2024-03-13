@@ -1,5 +1,5 @@
 <script setup>
-import { ref,  onMounted, computed } from 'vue'
+import { ref, onMounted, computed } from 'vue'
 
 const props = defineProps({
     plugindata: {
@@ -13,6 +13,11 @@ const props = defineProps({
     highlight: {
         type: Boolean,
         required: true
+    },
+    paragraphAfter: {
+        type: Number,
+        required: false,
+        default: 3
     }
 })
 
@@ -37,8 +42,18 @@ onMounted(() => {
         }
     })
 
-    entireText.value = entries.value.map(entry => entry.text).join(' ')
-})
+    // join up 5 entries into one
+    entireText.value = entries.value.map(entry => entry.text).reduce(
+            (acc, text, index) => {
+                if (index % props.paragraphAfter === 0) {
+                    acc.push('')
+                }
+                acc[acc.length - 1] += text + ' '
+                return acc
+            },
+            []
+        )
+    })
 
 const convertToSeconds = (timeString) => {
     const [minutes, seconds] = timeString.split(':').map(Number)
@@ -57,39 +72,48 @@ const highlightedIndexes = computed(() => {
 
 
 const highlightClass = (index) => {
-    if(highlightedIndexes.value.has(index)) {
-        const isDarkMode = document.documentElement.classList.contains('dark');
-        if (isDarkMode) { 
-            return 'highlightdark'
+    if (highlightedIndexes.value.has(index)) {
+        const isDarkMode = document.documentElement.classList.contains('dark')
+        if (isDarkMode) {
+            return 'highlightdark text-opacity-100'
         }
-        return 'highlight'
+        return 'highlight text-opacity-100'
     }
-    return ''
+    return 'text-opacity-50'
 }
 
 </script>
 
 
 <template>
-    <div class="break-all">
+    <div class="break-word w-[80%] h-96 text-m">
         <template v-if="props.highlight">
-            <span v-for="(entry, index) in entries" :key="index" :class="highlightClass(index)" class="mr-1">
+            <span v-for="(entry, index) in entries" :key="index" :class="highlightClass(index)" class="text-white">
                 {{ entry.text }}
+<!--                <template v-if="(index !== 0) && (index % props.paragraphAfter === 0)">-->
+<!--                    <p class="mb-5"></p>-->
+<!--                </template>-->
             </span>
         </template>
         <template v-else>
-            {{ entireText }}
+            <p class="mb-5" v-for="(entry, index) in entireText" :key="index">
+                {{ entry }}
+            </p>
         </template>
     </div>
 </template>
 
 <style scoped>
 .highlight {
-  background-color: rgb(212, 232, 255);
-  border-radius: 5px;
+    background-color: rgb(212, 232, 255);
+    border-radius: 5px;
+    font-weight: bold;
 }
+
 .highlightdark {
-  background-color: rgb(26, 83, 147);
-  border-radius: 5px;
+    background-color: rgb(26, 83, 147);
+    border-radius: 5px;
+    font-weight: bold;
+    padding: 1px;
 }
 </style>
