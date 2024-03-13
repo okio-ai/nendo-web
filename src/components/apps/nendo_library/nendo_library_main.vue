@@ -45,6 +45,8 @@ const currentTrack = ref({})
 const audioPlayerRef = ref(null)
 const scrollComponent = ref(null)
 const isLoading = ref(false)
+const sortAscending = ref(true)
+const sortRowHighlight = ref('')
 const selectedTracks = ref([])
 const collectionSelector = ref({ options: [], collectionSelected: [] })
 const exporterShow = ref(false)
@@ -980,12 +982,46 @@ function onDragStart($event, track) {
                 <table class="min-w-full table-auto" v-if="searchResultDisplayType === 'list'">
                     <thead class="text-left text-xs text-gray-600 dark:text-gray-400">
                         <tr class="border-b dark:border-black h-[44px] dark:h-[45px]">
-                            <th class="px-2 py-2 dark:pt-2 w-5 pl-5">
-                                Title
+                            <th class="px-2 py-2 dark:pt-2 pl-5 cursor-pointer hover:text-npurple"
+                                @click="() => {
+                                    sortAscending = !sortAscending
+                                    sortRowHighlight = 'title'
+                                    trackStore.sortTracksByMeta('title', sortAscending)
+                                }"
+                            >
+                                <div class="flex flex-row p-1">
+                                    Title
+                                    <font-awesome-icon
+                                        v-if="sortRowHighlight === 'title'"
+                                        :icon="sortAscending ? 'arrow-down' : 'arrow-up'"
+                                        size="sm" class="p-1 pl-2"
+                                    />
+                                </div>
                             </th>
                             <th class="px-2 py-2 dark:pt-2"></th>
                             <template v-for="(row, rowindex) in searchResultTableRows.optionsSelected" :key="rowindex">
-                                <th class="px-2 py-2 dark:pt-2">{{ row.name }}</th>
+                                <th class="px-2 py-2 dark:pt-2 cursor-pointer hover:text-npurple"
+                                    @click="() => {
+                                        sortAscending = !sortAscending
+                                        sortRowHighlight = row.key
+                                        console.log('row', row)
+                                        if (row.type === 'meta') {
+                                            trackStore.sortTracksByMeta(row.name.toLowerCase(), sortAscending)
+                                        } else {
+                                            trackStore.sortTracksByPluginData(row.plugin, row.key, sortAscending)
+                                        }
+
+                                    }"
+                                >
+                                    <div class="flex flex-row p-1">
+                                        {{ row.name }}
+                                        <font-awesome-icon
+                                            v-if="sortRowHighlight === row.key"
+                                            :icon="sortAscending ? 'arrow-down' : 'arrow-up'"
+                                            size="sm" class="m-1 ml-2"
+                                        />
+                                    </div>
+                                </th>
                             </template>
                             <th class="px-3 pl-1 py-1.5 dark:pt-1 text-right cursor-pointer hover:text-npurple whitespace-nowrap">
                             </th>
