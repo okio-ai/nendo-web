@@ -29,6 +29,30 @@ export const useTrackStore = defineStore({
         }
     },
     actions: {
+        sortTracksByMeta: function (metaField, sortAscending) {
+            this.tracks.sort((a, b) => {
+                if (sortAscending) {
+                    return a.meta[metaField] > b.meta[metaField]
+                } else {
+                    return a.meta[metaField] < b.meta[metaField]
+                }
+            })
+        },
+        sortTracksByPluginData: function (pluginName, pluginDataKey, sortAscending) {
+            this.tracks.sort((a, b) => {
+                const value_a = a.plugin_data.find((pluginData) =>
+                    pluginName === pluginData.plugin_name && pluginDataKey === pluginData.key
+                )
+                const value_b = b.plugin_data.find((pluginData) =>
+                    pluginName === pluginData.plugin_name && pluginDataKey === pluginData.key
+                )
+                if (sortAscending) {
+                    return value_a.value > value_b.value
+                } else {
+                    return value_a.value < value_b.value
+                }
+            })
+        },
         getSearchFilterParams: function () {
             let searchFilterParams = {
                 search: filterStore.search,
