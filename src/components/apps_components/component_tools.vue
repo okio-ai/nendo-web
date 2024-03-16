@@ -172,6 +172,7 @@ const generatorData = ref({
                             ]
                         },
                         { id: 'remove_vocals', name: 'Remove Vocals', description: '', type: 'check', value: true },
+                        { id: 'run_analysis', name: 'Run analysis', description: '', type: 'check', value: true },
                     ]
                 },
             ]
