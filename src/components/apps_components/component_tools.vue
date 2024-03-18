@@ -38,6 +38,19 @@ const toolActive = ref(true)
 const actionStatus = ref('')
 const actionResult = ref('')
 
+function generateRandomName() {
+    const adjectives = ["Funky", "Silly", "Mighty", "Quiet", "Loud", "Shiny"];
+    const nouns = ["Zebras", "Pandas", "Rockets", "Stars", "Wizards", "Knights"];
+    const verbs = ["Ponder", "Whisper", "Shout", "Sing", "Dance", "Think"];
+
+    // Helper function to select a random item from an array
+    function getRandomItem(array) {
+        return array[Math.floor(Math.random() * array.length)];
+    }
+
+    return `${getRandomItem(adjectives)}${getRandomItem(nouns)}${getRandomItem(verbs)}${getRandomItem(adjectives)}`;
+}
+
 const generatorData = ref({
     generator_selected: null,
     replace_plugin_data: true,
@@ -158,6 +171,7 @@ const generatorData = ref({
                     name: 'MusicGen Training',
                     showSettings: true,
                     settings: [
+                        { id: 'output_model_name', name: 'Output Model Name', description: 'Name of the output model checkpoint', type: 'string', value: generateRandomName() },
                         { id: 'prompt', name: 'Style Prompt', description: 'Default prompt to append to each track', type: 'string', value: '' },
                         { id: 'batch_size', name: 'Batch size', description: '', type: 'numbers', value: '1', value_min: '1', value_max: '500', value_step: '1' },
                         { id: 'epochs', name: 'Epochs', description: '', type: 'numbers', value: '5', value_min: '1', value_max: '256', value_step: '1' },
