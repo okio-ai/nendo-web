@@ -7,6 +7,7 @@ import CollectionPicker from '@/components/apps_components/component_collection_
 import { useTrackStore } from '@/stores/track.js'
 import { useBrowserStore } from '@/stores/browser.js'
 import { useActionStore } from '@/stores/actions.js'
+import { useModelStore } from '@/stores/model.js'
 import { useCollectionStore } from '@/stores/collection.js'
 import { useSessionStore } from '@/stores/session.js'
 
@@ -21,6 +22,7 @@ const trackStore = useTrackStore()
 const browserStore = useBrowserStore()
 const actionStore = useActionStore()
 const collectionStore = useCollectionStore()
+const modelStore = useModelStore()
 
 const props = defineProps({
     modalopen: {
@@ -35,6 +37,19 @@ const showConfig = ref(false)
 const toolActive = ref(true)
 const actionStatus = ref('')
 const actionResult = ref('')
+
+function generateRandomName() {
+    const adjectives = ["Funky", "Silly", "Mighty", "Quiet", "Loud", "Shiny"];
+    const nouns = ["Zebras", "Pandas", "Rockets", "Stars", "Wizards", "Knights"];
+    const verbs = ["Ponder", "Whisper", "Shout", "Sing", "Dance", "Think"];
+
+    // Helper function to select a random item from an array
+    function getRandomItem(array) {
+        return array[Math.floor(Math.random() * array.length)];
+    }
+
+    return `${getRandomItem(adjectives)}${getRandomItem(nouns)}${getRandomItem(verbs)}${getRandomItem(adjectives)}`;
+}
 
 const generatorData = ref({
     generator_selected: null,
@@ -133,12 +148,50 @@ const generatorData = ref({
                     settings: [
                         { id: 'prompt', name: 'Prompt', description: '', type: 'string', value: '' },
                         { id: 'cfg',name: 'CFG', description: '', type: 'numbers', value: '4.5', value_min: '0', value_max: '30', value_step: '0.1' },
-                        { id: 'temperature',name: 'Temperature', description: '', type: 'numbers', value: '1', value_min: '0', value_max: '30', value_step: '0.1' }
+                        { id: 'temperature',name: 'Temperature', description: '', type: 'numbers', value: '1', value_min: '0', value_max: '30', value_step: '0.1' },
+                        {
+                            id: 'model', name: 'Base model', description: '', type: 'select', value: 'facebook/musicgen-small',
+                            value_options: []
+                        },
                     ]
                 },
             ]
         },
-        { 
+        {
+            id: 'musicgentrain',
+            name: 'MusicGen Training',
+            description: '',
+            image: '',
+            showInput: true,
+            showReplaceSelector: true,
+            showAddToCollectionPicker: false,
+            plugins: [
+                {
+                    id: 'musicgentrain',
+                    name: 'MusicGen Training',
+                    showSettings: true,
+                    settings: [
+                        { id: 'output_model_name', name: 'Output Model Name', description: 'Name of the output model checkpoint', type: 'string', value: generateRandomName() },
+                        { id: 'prompt', name: 'Style Prompt', description: 'Default prompt to append to each track', type: 'string', value: '' },
+                        { id: 'batch_size', name: 'Batch size', description: '', type: 'numbers', value: '1', value_min: '1', value_max: '500', value_step: '1' },
+                        { id: 'epochs', name: 'Epochs', description: '', type: 'numbers', value: '5', value_min: '1', value_max: '256', value_step: '1' },
+                        { id: 'lr', name: 'Learning Rate', description: '', type: 'numbers', value: '0.0001', value_min: '0', value_max: '1.0', value_step: '0.0001' },
+                        {
+                            id: 'model', name: 'Base model', description: '', type: 'select', value: 'facebook/musicgen-small',
+                            value_options: [
+                                'facebook/musicgen-small',
+                                'facebook/musicgen-stereo-small',
+                                'facebook/musicgen-medium',
+                                'facebook/musicgen-stereo-medium'
+                            ]
+                        },
+                        { id: 'remove_vocals', name: 'Remove Vocals', description: '', type: 'check', value: true },
+                        { id: 'run_analysis', name: 'Run analysis', description: '', type: 'check', value: true },
+                    ]
+                },
+            ]
+        },
+        {
             id: 'voicegen',
             name: 'Voice Generator',
             description: '',
@@ -191,9 +244,15 @@ const generatorData = ref({
     ]
 })
 
-onMounted(() => {
+onMounted(async () => {
     toolActive.value = false
     showConfig.value = false
+    await modelStore.fetchModelInfo()
+    generatorData.value.generator
+        .find(g => g.id === "musicgen")
+        .plugins[0]
+        .settings.find(s => s.id === "model")
+        .value_options = modelStore.availableModels
 })
 
 watch(() => props.modalopen, (newValue) => {
@@ -493,13 +552,13 @@ const getIsActiveSetting = (plugin) => {
                                 </div>
                             </div>
                             <div v-else class="mb-2"></div>
-                            <transition 
-                                name="expand" 
-                                @before-enter="beforeEnter" 
-                                @enter="enter" 
-                                @after-enter="afterEnter" 
-                                @before-leave="beforeLeave" 
-                                @leave="leave" 
+                            <transition
+                                name="expand"
+                                @before-enter="beforeEnter"
+                                @enter="enter"
+                                @after-enter="afterEnter"
+                                @before-leave="beforeLeave"
+                                @leave="leave"
                                 @after-leave="afterLeave"
                             >
                                 <div v-if="plugin.showSettings" class="py-2">
@@ -565,13 +624,13 @@ const getIsActiveSetting = (plugin) => {
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
                             </svg>
                         </div>
-                        <transition 
-                            name="expand" 
-                            @before-enter="beforeEnter" 
-                            @enter="enter" 
-                            @after-enter="afterEnter" 
-                            @before-leave="beforeLeave" 
-                            @leave="leave" 
+                        <transition
+                            name="expand"
+                            @before-enter="beforeEnter"
+                            @enter="enter"
+                            @after-enter="afterEnter"
+                            @before-leave="beforeLeave"
+                            @leave="leave"
                             @after-leave="afterLeave"
                         >
                             <div v-if="showConfig">
